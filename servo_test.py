@@ -1,13 +1,12 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import sys
 import os
-ros_master_uri = "http://172.19.0.2:11311"
 import rospy
 import moveit_commander
 import geometry_msgs.msg
-from rosgraph_msgs.msg import Clock
-from moveit_commander.conversions import pose_to_list, list_to_pose
+from geometry_msgs.msg import Twist
+from moveit_commander.conversions import pose_to_list
 
 def initialize_robot():
     moveit_commander.roscpp_initialize(sys.argv)
@@ -19,21 +18,12 @@ def initialize_robot():
 def initialize_move_group(group_name):
     return moveit_commander.MoveGroupCommander(group_name)
 
-def get_current_time():
-    clock_msg = rospy.wait_for_message("/clock", Clock)
-    return clock_msg.clock
-
-def calculate_new_pose(current_pose, velocity, angular_velocity, elapsed_time):
+def calculate_new_pose(current_pose, velocity, elapsed_time):
     new_pose = geometry_msgs.msg.Pose()
-    # Update position
     new_pose.position.x = current_pose.position.x + velocity['x'] * elapsed_time
     new_pose.position.y = current_pose.position.y + velocity['y'] * elapsed_time
     new_pose.position.z = current_pose.position.z + velocity['z'] * elapsed_time
-    # Update orientation (simple Euler integration)
-    new_pose.orientation.x = current_pose.orientation.x + angular_velocity['x'] * elapsed_time
-    new_pose.orientation.y = current_pose.orientation.y + angular_velocity['y'] * elapsed_time
-    new_pose.orientation.z = current_pose.orientation.z + angular_velocity['z'] * elapsed_time
-    new_pose.orientation.w = current_pose.orientation.w # Keep w unchanged for simplicity
+    new_pose.orientation = current_pose.orientation
     return new_pose
 
 def move_to_pose(move_group, pose_target):
@@ -56,7 +46,7 @@ def main():
     planning_frame = move_group.get_planning_frame()
     print("============ %s Reference frame: %s" % (arm_to_control, planning_frame))
     eef_link = move_group.get_end_effector_link()
-    print("============ %s End effector: %s" % (arm_to_control, eef_link))
+    print("============ %s End effector: %s" % arm_to_control, eef_link)
 
     # Print current joint values and pose
     current_joint_values = move_group.get_current_joint_values()
@@ -65,31 +55,24 @@ def main():
     print("============ %s Current Pose: " % arm_to_control, current_pose)
 
     # Define a constant velocity for each direction
-    velocity = {'x': 0.01, 'y': 0.01, 'z': 0.01}
-    # Define a constant angular velocity for each orientation axis
-    angular_velocity = {'x': 0.01, 'y': 0.01, 'z': 0.01}
+    velocity = {'x': 0.01, 'y': 0.0, 'z': 0.0}
     time_step = 1.0
 
-    # Get the start time
-    current_time = get_current_time()
-    start_time = current_time.secs + current_time.nsecs / 1e9
+    # Initialize the publisher for the /servo_server/delta_twist_cmds topic
+    velocity_publisher = rospy.Publisher('/servo_server/delta_twist_cmds', Twist, queue_size=10)
 
     while not rospy.is_shutdown():
-        # Get the current time
-        current_time = get_current_time()
-        elapsed_time = current_time.secs + current_time.nsecs / 1e9 - start_time
+        # Create a Twist message with the velocity
+        twist_msg = Twist()
+        twist_msg.linear.x = velocity['x']
+        twist_msg.linear.y = velocity['y']
+        twist_msg.linear.z = velocity['z']
+        twist_msg.angular.x = 0.0
+        twist_msg.angular.y = 0.0
+        twist_msg.angular.z = 0.0
 
-        # Calculate the new pose based on the constant velocity and elapsed time
-        pose_target = calculate_new_pose(current_pose, velocity, angular_velocity, elapsed_time)
-
-        # Move to the new pose
-        plan = move_to_pose(move_group, pose_target)
-
-        if not plan:
-            print("Planning failed, no valid plan found.")
-        else:
-            current_pose = move_group.get_current_pose().pose
-            print("============ %s final end-effector pose: %s" % (arm_to_control, current_pose))
+        # Publish the velocity to the /servo_server/delta_twist_cmds topic
+        velocity_publisher.publish(twist_msg)
 
         # Sleep for the time step duration
         rospy.sleep(time_step)

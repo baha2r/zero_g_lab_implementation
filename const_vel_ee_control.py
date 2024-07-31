@@ -1,13 +1,14 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import sys
 import os
-ros_master_uri = "http://172.19.0.2:11311"
+# ros_master_uri = "http://172.19.0.2:11311"
 import rospy
 import moveit_commander
 import geometry_msgs.msg
-from rosgraph_msgs.msg import Clock
+# from rosgraph_msgs.msg import Clock
 from moveit_commander.conversions import pose_to_list
+
 
 def initialize_robot():
     moveit_commander.roscpp_initialize(sys.argv)
@@ -19,9 +20,9 @@ def initialize_robot():
 def initialize_move_group(group_name):
     return moveit_commander.MoveGroupCommander(group_name)
 
-def get_current_time():
-    clock_msg = rospy.wait_for_message("/clock", Clock)
-    return clock_msg.clock
+# def get_current_time():
+#     clock_msg = rospy.wait_for_message("/clock", Clock)
+#     return clock_msg.clock
 
 def calculate_new_pose(current_pose, velocity, elapsed_time):
     new_pose = geometry_msgs.msg.Pose()
@@ -60,23 +61,27 @@ def main():
     print("============ %s Current Pose: " % arm_to_control, current_pose)
 
     # Define a constant velocity for each direction
-    velocity = {'x': 0.01, 'y': 0.01, 'z': 0.01}
+    velocity = {'x': 0.01, 'y': 0.0, 'z': 0.0}
     time_step = 1.0
 
     # Get the start time
-    current_time = get_current_time()
-    start_time = current_time.secs + current_time.nsecs / 1e9
+    # current_time = get_current_time()
+    # start_time = current_time.secs + current_time.nsecs / 1e9
 
     while not rospy.is_shutdown():
         # Get the current time
-        current_time = get_current_time()
-        elapsed_time = current_time.secs + current_time.nsecs / 1e9 - start_time
+        # current_time = get_current_time()
+        # elapsed_time = current_time.secs + current_time.nsecs / 1e9 - start_time
 
         # Calculate the new pose based on the constant velocity and elapsed time
-        pose_target = calculate_new_pose(current_pose, velocity, elapsed_time)
+        pose_target = calculate_new_pose(current_pose, velocity, 1)
+
+        # just need to publish the velocity 
 
         # Move to the new pose
-        plan = move_to_pose(move_group, pose_target)
+        # plan = move_to_pose(move_group, pose_target)
+
+        # create a topic to publish the velocity        
 
         if not plan:
             print("Planning failed, no valid plan found.")
