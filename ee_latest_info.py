@@ -1,4 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+import os
+ros_master_uri = "http://192.168.88.11:11311"
+os.environ['ROS_MASTER_URI'] = ros_master_uri
 
 import rospy
 from geometry_msgs.msg import PoseStamped
@@ -88,6 +91,8 @@ def w_a_tool0_callback(msg):
 
     latest_info_w_a_tool0['position'] = msg.pose.position
     latest_info_w_a_tool0['orientation_euler'] = curr_euler
+
+    # print(previous_pose_w_a_tool0)
 
     previous_pose_w_a_tool0 = msg
 
