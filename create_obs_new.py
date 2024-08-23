@@ -92,7 +92,7 @@ def create_robot_obs_array(pose_listener):
 
     # Assuming the cuboids are defined by their center positions and half-extents (dx, dy, dz)
     # Define the cuboids based on the robot end effectors' positions and assumed dimensions
-    cuboid_w_a = (position_w_a, (0.1, 0.1, 0.1))  # Replace with actual dimensions
+    cuboid_w_a = (position_w_a, (0.1, 0.1, 0.02))  # Replace with actual dimensions
     cuboid_c_a = (position_c_a, (0.1, 0.1, 0.1))  # Replace with actual dimensions
 
     # Calculate minimum distance between the cuboids
