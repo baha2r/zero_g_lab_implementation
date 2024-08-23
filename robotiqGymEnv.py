@@ -116,12 +116,13 @@ class robotiqGymEnv(gym.Env):
         randx, randy, randz, randf1, randf2, randf3, randt = np.random.uniform(-1, 1, 7)
 
         targetpos = [0.0 + 0.30 * randx, 0.8 + 0.2 * randy, 1.0 + 0.20 * randz]
-        targetpos = [-0.851256461261, 0.905025226891, 0.634342716891]
+        targetpos = [0.114, 0.851, 1.203]
         self.tilt = np.random.uniform(-np.pi/6, np.pi/6)
         self.tilt = 0
 
         # targetorn = p.getQuaternionFromEuler([0, 0, 0])
         targetorn = p.getQuaternionFromEuler([0, self.tilt, 0])
+        print(targetorn)
         # print(self.target_yaw)
 
         # targetpos = [0.07336462703085808,0.6302821367352937,0.9215777045808058]

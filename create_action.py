@@ -37,6 +37,7 @@ def return_action():
     try:
         while True:
             obs = create_robot_obs_array(pose_listener)
+            print("obs: ", obs)
             action = get_action(model, obs)
             action = list(action)
             data = pickle.dumps(action, protocol=2)

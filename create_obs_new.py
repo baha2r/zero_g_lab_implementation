@@ -78,6 +78,7 @@ def create_robot_obs_array(pose_listener):
     # Velocity arrays
     lin_vel_w_a = np.array(w_a_info['linear_velocity'])
     ang_vel_w_a = np.array(w_a_info['angular_velocity'])
+    ang_vel_w_a = np.array([0,0,0])
 
     lin_vel_c_a = np.array(c_a_info['linear_velocity'])
     ang_vel_c_a = np.array(c_a_info['angular_velocity'])
@@ -92,24 +93,24 @@ def create_robot_obs_array(pose_listener):
 
     # Assuming the cuboids are defined by their center positions and half-extents (dx, dy, dz)
     # Define the cuboids based on the robot end effectors' positions and assumed dimensions
-    cuboid_w_a = (position_w_a, (0.1, 0.1, 0.02))  # Replace with actual dimensions
-    cuboid_c_a = (position_c_a, (0.1, 0.1, 0.1))  # Replace with actual dimensions
+    cuboid_w_a = (position_w_a, (0.051, 0.051, 0.03))  # Replace with actual dimensions
+    cuboid_c_a = (position_c_a, (0.051, 0.051, 0.05))  # Replace with actual dimensions
 
     # Calculate minimum distance between the cuboids
-    min_distance = min_distance_between_cuboids(cuboid_w_a, cuboid_c_a)
+    min_distance = min_distance_between_cuboids(cuboid_c_a, cuboid_w_a)
 
     # Concatenate all the components into a single array
     robot_info_array = np.concatenate([
-        position_w_a,
-        orientation_w_a,
-        lin_vel_w_a,
-        ang_vel_w_a,
         position_c_a,
         orientation_c_a,
         lin_vel_c_a,
         ang_vel_c_a,
+        position_w_a,
+        orientation_w_a,
         relative_position,
         relative_orientation,
+        lin_vel_w_a,
+        ang_vel_w_a,
         relative_lin_vel,
         relative_ang_vel,
         min_distance

@@ -109,11 +109,11 @@ class PoseListener:
         thread_w_a.start()
 
     def _listen_c_a_tool0(self):
-        rospy.Subscriber('/capture_c_a_tool0/pose', PoseStamped, self.c_a_tool0_callback)
+        rospy.Subscriber('/capture_c_a_tool1/pose', PoseStamped, self.c_a_tool0_callback)
         rospy.spin()  # Keeps the thread alive
 
     def _listen_w_a_tool0(self):
-        rospy.Subscriber('/capture_w_a_tool0/pose', PoseStamped, self.w_a_tool0_callback)
+        rospy.Subscriber('/capture_ot_offset/pose', PoseStamped, self.w_a_tool0_callback)
         rospy.spin()  # Keeps the thread alive
 
     def get_latest_c_a_tool0_info(self):
