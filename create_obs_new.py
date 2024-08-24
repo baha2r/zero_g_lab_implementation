@@ -56,8 +56,6 @@ def create_robot_obs_array(pose_listener):
     c_a_info = pose_listener.get_latest_c_a_tool0_info()
     w_a_info = pose_listener.get_latest_w_a_tool0_info()
 
-
-
     # If data is not yet available, return an array of zeros
     if c_a_info['position'] is None or w_a_info['position'] is None:
         return np.zeros(39)
@@ -65,7 +63,7 @@ def create_robot_obs_array(pose_listener):
     while c_a_info['linear_velocity'] is None or w_a_info['linear_velocity'] is None:
         c_a_info = pose_listener.get_latest_c_a_tool0_info()
         w_a_info = pose_listener.get_latest_w_a_tool0_info()
-        time.sleep(0.5)
+        time.sleep(0.05)
 
     # Position arrays
     position_w_a = np.array([w_a_info['position'].x, w_a_info['position'].y, w_a_info['position'].z])
