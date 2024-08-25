@@ -51,6 +51,7 @@ def return_action():
     # delta_prev = None
 
     rate = rospy.Rate(10)  # 10 Hz
+    time.sleep(1)
     while not rospy.is_shutdown():
         global current_pose
         obs = create_robot_obs_array(pose_listener)

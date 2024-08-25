@@ -52,6 +52,7 @@ def min_distance_between_cuboids(cuboid1, cuboid2):
 
 # Function to create the 39-element NumPy array
 def create_robot_obs_array(pose_listener):
+    rate = rospy.Rate(10)  # 10 Hz
     # Get the latest information from both robots
     c_a_info = pose_listener.get_latest_c_a_tool0_info()
     w_a_info = pose_listener.get_latest_w_a_tool0_info()
@@ -63,7 +64,8 @@ def create_robot_obs_array(pose_listener):
     while c_a_info['linear_velocity'] is None or w_a_info['linear_velocity'] is None:
         c_a_info = pose_listener.get_latest_c_a_tool0_info()
         w_a_info = pose_listener.get_latest_w_a_tool0_info()
-        time.sleep(0.05)
+        time.sleep(1)
+        print("Waiting for velocity data...")
 
     # Position arrays
     position_w_a = np.array([w_a_info['position'].x, w_a_info['position'].y, w_a_info['position'].z])
@@ -113,6 +115,8 @@ def create_robot_obs_array(pose_listener):
         relative_ang_vel,
         min_distance
     ])
+
+    rate.sleep()
 
     return robot_info_array
 
