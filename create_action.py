@@ -42,7 +42,7 @@ def return_action():
             action = list(action)
             data = pickle.dumps(action, protocol=2)
             sock.sendall(data)
-            time.sleep(1)
+            time.sleep(.002)
     except KeyboardInterrupt:
         print("Shutting down.")
 
