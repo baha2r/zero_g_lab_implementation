@@ -28,10 +28,12 @@ def plot_headers(headers):
     plt.title('Timestamps from Message Headers')
     plt.xlabel('Message Index')
     plt.ylabel('Time (s)')
-    plt.show()
+    # save the plot
+    plt.savefig('timestamps.png')
+    # plt.show()
 
 # Load the ROS bag
-bag_path = 'path_to_your_rosbag.bag'
+bag_path = 'rosbags/delay_2ms_x0.06_both_robots_all50Hz_ry_3.5_t_16_2024-08-26-17-32-08.bag'
 bag = rosbag.Bag(bag_path)
 
 # Get bag info and print it
@@ -39,11 +41,15 @@ info = get_bag_info(bag)
 print(f"Bag Info: {info}")
 
 # Choose a topic to extract headers from
-topic = '/your_topic_name'
+topic = '/action_topic'
+# print bag.read_messages(topics=[topic])
+topic = bag.get_type_and_topic_info()[1].keys()
+print(f"Topics: {topic}")
 
 # Get and plot headers
-headers = get_headers(bag, topic)
-plot_headers(headers)
+# headers = get_headers(bag, topic)
+# print(f"Headers: {headers}")
+# plot_headers(headers)
 
 # Close the bag after use
 bag.close()
