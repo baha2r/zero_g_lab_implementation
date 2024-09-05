@@ -5,7 +5,13 @@ from datetime import datetime
 import numpy as np
 import tf.transformations as tft
 from scipy.ndimage import uniform_filter1d
+import matplotlib.lines as mlines
 
+# Function to extract the start time of a topic
+def get_topic_start_time(bag, topic):
+    for _, msg, t in bag.read_messages(topics=[topic]):
+        return t.to_sec()
+    
 # Function to get bag info
 def get_bag_info(bag):
     info = {
@@ -46,20 +52,20 @@ def extract_filtered_topic_data(bag, topic, start_time, end_time):
             messages.append(msg)  # Append the entire message for further analysis
     return messages
 
+# Function to extract messages and shift their timestamps
+def extract_shifted_topic_data(bag, topic, reference_start_time):
+    messages = []
+    for topic, msg, t in bag.read_messages(topics=[topic]):
+        timestamp = t.to_sec()
+        if timestamp >= reference_start_time:
+            messages.append(msg)
+    return messages
+
 def extract_topic_data(bag, topic):
     messages = []
     for topic, msg, t in bag.read_messages(topics=[topic]):
         messages.append(msg)  # Append the entire message for further analysis
     return messages
-
-# Function to print details of the extracted messages
-def print_action_topic_messages(messages):
-    for i, msg in enumerate(messages):
-        # Print some details for each message
-        # Assuming msg has a 'header' and other fields you are interested in
-        print(f"Message {i}:")
-        print(f"  Timestamp: {msg.header.stamp.to_sec()}")
-        print(f"  Data: {msg.twist.linear.x}, {msg.twist.angular.z}")
 
 def plot_action_topic(messages):
     # Extract linear and angular twist values from the messages
@@ -75,28 +81,28 @@ def plot_action_topic(messages):
 
     # Plot linear.x, linear.y, linear.z in one figure
     plt.figure()
-    plt.plot(timestamps, linear_x,  label='Linear X')
-    plt.plot(timestamps, linear_y,  label='Linear Y')
-    plt.plot(timestamps, linear_z,  label='Linear Z')
-    plt.title('Linear Twist in X, Y, Z Directions over Time')
+    plt.plot(timestamps, linear_x,  label='X', color='red')
+    plt.plot(timestamps, linear_y,  label='Y', color='green')
+    plt.plot(timestamps, linear_z,  label='Z', color='blue')
+    plt.title('Displacement Action')
     plt.xlabel('Time (s)')
-    plt.ylabel('Linear Velocity')
+    plt.ylabel('x0.01 m')
     plt.legend()
     plt.tight_layout()
-    plt.savefig('linear_twist_plot.png')
+    plt.savefig('linear_action_plot.png')
     plt.close()
 
     # Plot angular.x, angular.y, angular.z in another figure
     plt.figure()
-    plt.plot(timestamps, angular_x, label='Angular X')
-    plt.plot(timestamps, angular_y, label='Angular Y')
-    plt.plot(timestamps, angular_z, label='Angular Z')
-    plt.title('Angular Twist in X, Y, Z Directions over Time')
+    plt.plot(timestamps, angular_x, label='Roll', color='red')
+    plt.plot(timestamps, angular_y, label='Pitch', color='green')
+    plt.plot(timestamps, angular_z, label='Yaw', color='blue')
+    plt.title('Rotation Action')
     plt.xlabel('Time (s)')
-    plt.ylabel('Angular Velocity')
+    plt.ylabel('x0.1 rad')
     plt.legend()
     plt.tight_layout()
-    plt.savefig('angular_twist_plot.png')
+    plt.savefig('angular_action_plot.png')
     plt.close()
 
 def plot_pose_topic(messages):
@@ -120,10 +126,10 @@ def plot_pose_topic(messages):
 
     # Plot position.x, position.y, position.z in one figure
     plt.figure()
-    plt.plot(timestamps, position_x,  label='Position X')
-    plt.plot(timestamps, position_y,  label='Position Y')
-    plt.plot(timestamps, position_z,  label='Position Z')
-    plt.title('Position in X, Y, Z Directions over Time')
+    plt.plot(timestamps, position_x,  label='Position X', color='red')
+    plt.plot(timestamps, position_y,  label='Position Y', color='green')
+    plt.plot(timestamps, position_z,  label='Position Z', color='blue')
+    plt.title('Position over Time')
     plt.xlabel('Time (s)')
     plt.ylabel('Position')
     plt.legend()
@@ -133,10 +139,10 @@ def plot_pose_topic(messages):
 
     # Plot orientation.x, orientation.y, orientation.z, orientation.w in another figure
     plt.figure()
-    plt.plot(timestamps, orientation_roll, label='Orientation Roll')
-    plt.plot(timestamps, orientation_pitch, label='Orientation Pitch')
-    plt.plot(timestamps, orientation_yaw, label='Orientation Yaw')
-    plt.title('Orientation in X, Y, Z Directions over Time')
+    plt.plot(timestamps, orientation_roll, label='Orientation Roll', color='red')
+    plt.plot(timestamps, orientation_pitch, label='Orientation Pitch', color='green')
+    plt.plot(timestamps, orientation_yaw, label='Orientation Yaw', color='blue')
+    plt.title('Orientation over Time')
     plt.xlabel('Time (s)')
     plt.ylabel('Orientation')
     plt.legend()
@@ -183,40 +189,59 @@ def plot_pose_topic_w_ref(messages, ref):
 
     # Plot position.x, position.y, position.z in one figure
     plt.figure()
-    plt.plot(timestamps, position_x,  label='Position X')
-    plt.plot(timestamps, position_y,  label='Position Y')
-    plt.plot(timestamps, position_z,  label='Position Z')
-    plt.plot(timestamps_ref, position_x_ref, '--', label='Position X Ref')
-    plt.plot(timestamps_ref, position_y_ref, '--', label='Position Y Ref')
-    plt.plot(timestamps_ref, position_z_ref, '--', label='Position Z Ref')
-    plt.title('Position in X, Y, Z Directions over Time')
+    plt.plot(timestamps, position_x, color='red')
+    plt.plot(timestamps, position_y, color='green')
+    plt.plot(timestamps, position_z, color='blue')
+    plt.plot(timestamps_ref, position_x_ref, '--', color='red')
+    plt.plot(timestamps_ref, position_y_ref, '--', color='green')
+    plt.plot(timestamps_ref, position_z_ref, '--', color='blue')
+    plt.title('Position over Time')
     plt.xlabel('Time (s)')
     plt.ylabel('Position')
-    plt.legend()
+    gripper_line = mlines.Line2D([], [], color='black', linestyle='-', label='Gripper')
+    target_line = mlines.Line2D([], [], color='black', linestyle='--', label='Target')
+    plt.legend(handles=[gripper_line, target_line])
     plt.tight_layout()
     plt.savefig('position_plot.png')
     plt.close()
 
     # Plot orientation.x, orientation.y, orientation.z, orientation.w in another figure
     plt.figure()
-    plt.plot(timestamps, orientation_roll, label='Orientation Roll')
-    plt.plot(timestamps, orientation_pitch, label='Orientation Pitch')
-    plt.plot(timestamps, orientation_yaw, label='Orientation Yaw')
-    plt.plot(timestamps_ref, orientation_roll_ref, '--', label='Orientation Roll Ref')
-    plt.plot(timestamps_ref, orientation_pitch_ref, '--', label='Orientation Pitch Ref')
-    plt.plot(timestamps_ref, orientation_yaw_ref, '--', label='Orientation Yaw Ref')
-    plt.title('Orientation in X, Y, Z Directions over Time')
+    plt.plot(timestamps, orientation_x, color='red')
+    plt.plot(timestamps, orientation_y, color='green')
+    plt.plot(timestamps, orientation_z, color='blue')
+    plt.plot(timestamps, orientation_w, color='purple')
+    plt.plot(timestamps_ref, orientation_x_ref, '--', color='red')
+    plt.plot(timestamps_ref, orientation_y_ref, '--', color='green')
+    plt.plot(timestamps_ref, orientation_z_ref, '--', color='blue')
+    plt.plot(timestamps_ref, orientation_w_ref, '--', color='purple')
+    plt.title('Orientation (quat) over Time')
     plt.xlabel('Time (s)')
     plt.ylabel('Orientation')
-    plt.legend()
+    gripper_line = mlines.Line2D([], [], color='black', linestyle='-', label='Gripper')
+    target_line = mlines.Line2D([], [], color='black', linestyle='--', label='Target')
+    plt.legend(handles=[gripper_line, target_line])
+    plt.tight_layout()
+    plt.savefig('orientation_quaternion_plot.png')
+    plt.close()
+
+    # Plot orientation roll, pitch, yaw
+    plt.figure()
+    plt.plot(timestamps, orientation_roll, label='Orientation Roll', color='red')
+    plt.plot(timestamps, orientation_pitch, label='Orientation Pitch', color='green')
+    plt.plot(timestamps, orientation_yaw, label='Orientation Yaw', color='blue')
+    plt.plot(timestamps_ref, orientation_roll_ref, '--', label='Orientation Roll Ref', color='red')
+    plt.plot(timestamps_ref, orientation_pitch_ref, '--', label='Orientation Pitch Ref', color='green')
+    plt.plot(timestamps_ref, orientation_yaw_ref, '--', label='Orientation Yaw Ref', color='blue')
+    plt.title('Orientation (euler) over Time')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Orientation')
+    gripper_line = mlines.Line2D([], [], color='black', linestyle='-', label='Gripper')
+    target_line = mlines.Line2D([], [], color='black', linestyle='--', label='Target')
+    plt.legend(handles=[gripper_line, target_line])
     plt.tight_layout()
     plt.savefig('orientation_euler_plot.png')
     plt.close()
-
-import numpy as np
-import matplotlib.pyplot as plt
-import tf.transformations as tft
-from scipy.ndimage import uniform_filter1d
 
 def calculate_velocity(message, window_size=10):
     # Extract the position and orientation values
@@ -224,21 +249,30 @@ def calculate_velocity(message, window_size=10):
     position_y = [msg.pose.position.y for msg in message]
     position_z = [msg.pose.position.z for msg in message]
 
+    position_x_smooth = uniform_filter1d(position_x, size=window_size)
+    position_y_smooth = uniform_filter1d(position_y, size=window_size)
+    position_z_smooth = uniform_filter1d(position_z, size=window_size)
+
     orientation_x = [msg.pose.orientation.x for msg in message]
     orientation_y = [msg.pose.orientation.y for msg in message]
     orientation_z = [msg.pose.orientation.z for msg in message]
     orientation_w = [msg.pose.orientation.w for msg in message]
 
+    orientation_x_smooth = uniform_filter1d(orientation_x, size=window_size)
+    orientation_y_smooth = uniform_filter1d(orientation_y, size=window_size)
+    orientation_z_smooth = uniform_filter1d(orientation_z, size=window_size)
+    orientation_w_smooth = uniform_filter1d(orientation_w, size=window_size)
+
     # Calculate the time stamps
     timestamps = [msg.header.stamp.to_sec() for msg in message]
 
     # Calculate the velocity
-    velocity_x = np.diff(position_x) / np.diff(timestamps)
-    velocity_y = np.diff(position_y) / np.diff(timestamps)
-    velocity_z = np.diff(position_z) / np.diff(timestamps)
+    velocity_x = np.diff(position_x_smooth) / np.diff(timestamps)
+    velocity_y = np.diff(position_y_smooth) / np.diff(timestamps)
+    velocity_z = np.diff(position_z_smooth) / np.diff(timestamps)
 
     # Calculate the angular velocity
-    orintation = list(zip(orientation_x, orientation_y, orientation_z, orientation_w))
+    orintation = list(zip(orientation_x_smooth, orientation_y_smooth, orientation_z_smooth, orientation_w_smooth))
     euler = [tft.euler_from_quaternion(ori) for ori in orintation]
     orientation_roll = [e[0] for e in euler]
     orientation_pitch = [e[1] for e in euler]
@@ -249,23 +283,24 @@ def calculate_velocity(message, window_size=10):
     angular_velocity_z = np.diff(orientation_yaw) / np.diff(timestamps)
 
     # Apply a moving average to smooth the velocity data
-    velocity_x_smooth = uniform_filter1d(velocity_x, size=window_size)
-    velocity_y_smooth = uniform_filter1d(velocity_y, size=window_size)
-    velocity_z_smooth = uniform_filter1d(velocity_z, size=window_size)
+    velocity_x_smooth = uniform_filter1d(velocity_x, size=window_size*5)
+    velocity_y_smooth = uniform_filter1d(velocity_y, size=window_size*5)
+    velocity_z_smooth = uniform_filter1d(velocity_z, size=window_size*5)
 
-    angular_velocity_x_smooth = uniform_filter1d(angular_velocity_x, size=window_size)
-    angular_velocity_y_smooth = uniform_filter1d(angular_velocity_y, size=window_size)
-    angular_velocity_z_smooth = uniform_filter1d(angular_velocity_z, size=window_size)
+    angular_velocity_x_smooth = uniform_filter1d(angular_velocity_x, size=window_size*5)
+    angular_velocity_y_smooth = uniform_filter1d(angular_velocity_y, size=window_size*5)
+    angular_velocity_z_smooth = uniform_filter1d(angular_velocity_z, size=window_size*5)
 
     # Plot the velocity
     plt.figure()
-    plt.plot(timestamps[:-1], velocity_x, label='Velocity X (raw)', alpha=0.3)
-    plt.plot(timestamps[:-1], velocity_x_smooth, label='Velocity X (smoothed)')
-    plt.plot(timestamps[:-1], velocity_y, label='Velocity Y (raw)', alpha=0.3)
-    plt.plot(timestamps[:-1], velocity_y_smooth, label='Velocity Y (smoothed)')
-    plt.plot(timestamps[:-1], velocity_z, label='Velocity Z (raw)', alpha=0.3)
-    plt.plot(timestamps[:-1], velocity_z_smooth, label='Velocity Z (smoothed)')
-    plt.title('Velocity in X, Y, Z Directions over Time')
+    plt.plot(timestamps[:-1], velocity_x,  alpha=0.3, color='red')
+    plt.plot(timestamps[:-1], velocity_x_smooth, label='Velocity X', color='red')
+    plt.plot(timestamps[:-1], velocity_y,  alpha=0.3, color='green')
+    plt.plot(timestamps[:-1], velocity_y_smooth, label='Velocity Y', color='green')
+    plt.plot(timestamps[:-1], velocity_z, alpha=0.3, color='blue')
+    plt.plot(timestamps[:-1], velocity_z_smooth, label='Velocity Z', color='blue')
+    plt.axhline(0, color='black', linestyle='--', linewidth=.1)
+    plt.title('Linear Velocity over Time')
     plt.xlabel('Time (s)')
     plt.ylabel('Velocity')
     plt.legend()
@@ -275,13 +310,14 @@ def calculate_velocity(message, window_size=10):
 
     # Plot the angular velocity
     plt.figure()
-    plt.plot(timestamps[:-1], angular_velocity_x, label='Angular Velocity X (raw)', alpha=0.3)
-    plt.plot(timestamps[:-1], angular_velocity_x_smooth, label='Angular Velocity X (smoothed)')
-    plt.plot(timestamps[:-1], angular_velocity_y, label='Angular Velocity Y (raw)', alpha=0.3)
-    plt.plot(timestamps[:-1], angular_velocity_y_smooth, label='Angular Velocity Y (smoothed)')
-    plt.plot(timestamps[:-1], angular_velocity_z, label='Angular Velocity Z (raw)', alpha=0.3)
-    plt.plot(timestamps[:-1], angular_velocity_z_smooth, label='Angular Velocity Z (smoothed)')
-    plt.title('Angular Velocity in X, Y, Z Directions over Time')
+    plt.plot(timestamps[:-1], angular_velocity_x, alpha=0.3, color='red')
+    plt.plot(timestamps[:-1], angular_velocity_x_smooth, label='Angular Velocity X', color='red')
+    plt.plot(timestamps[:-1], angular_velocity_y, alpha=0.3, color='green')
+    plt.plot(timestamps[:-1], angular_velocity_y_smooth, label='Angular Velocity Y', color='green')
+    plt.plot(timestamps[:-1], angular_velocity_z, alpha=0.3, color='blue')
+    plt.plot(timestamps[:-1], angular_velocity_z_smooth, label='Angular Velocity Z', color='blue')
+    plt.axhline(0, color='black', linestyle='--', linewidth=.1)
+    plt.title('Angular Velocity over Time')
     plt.xlabel('Time (s)')
     plt.ylabel('Angular Velocity')
     plt.legend()
@@ -292,12 +328,12 @@ def calculate_velocity(message, window_size=10):
     return velocity_x_smooth, velocity_y_smooth, velocity_z_smooth, angular_velocity_x_smooth, angular_velocity_y_smooth, angular_velocity_z_smooth
 
 # Load the ROS bag
-bag_path = 'rosbags/delay_2ms_x0.06_both_robots_all50Hz_ry_3.5_t_16_2024-08-26-17-32-08.bag'
+bag_path = 'rosbags/delay_2ms_x0.06_both_robots_all50hz_ry_2t10_2024-08-26-16-31-05.bag'
 bag = rosbag.Bag(bag_path, 'r')
 
 # Define how much time to cut from the start and the end
-cut_first_x_seconds = 10  # Cut first X seconds
-cut_last_y_seconds = 30   # Cut last Y seconds
+cut_first_x_seconds = 0  # Cut first X seconds
+cut_last_y_seconds = 0   # Cut last Y seconds
 
 # Get the actual start and end time of the bag
 bag_start_time = bag.get_start_time()
@@ -308,24 +344,25 @@ print(f"Bag end time: {bag_end_time}")
 # Calculate the new start and end times after cutting
 start_time = bag_start_time + cut_first_x_seconds
 end_time = bag_end_time - cut_last_y_seconds
+reference_start_time = get_topic_start_time(bag, '/action_topic')
 
 # Get bag info and print it
 info = get_bag_info(bag)
-# print(f"Bag Info: {info}")
+print(f"Bag Info: {info}")
 
 # Extract data from a topic
-action_data = extract_filtered_topic_data(bag, '/action_topic', start_time, end_time)
+action_data = extract_topic_data(bag, '/action_topic')
 plot_action_topic(action_data)
 gripper_pose_topic = '/capture_c_a_tool1/pose'
-gripper_pose_data = extract_filtered_topic_data(bag, gripper_pose_topic, start_time, end_time)
+gripper_pose_data = extract_shifted_topic_data(bag, gripper_pose_topic, reference_start_time)
 velocity_x, velocity_y, velocity_z, angular_velocity_x, angular_velocity_y, angular_velocity_z = calculate_velocity(gripper_pose_data)
 # print(f"Velocity X: {velocity_x}")
 target_pose_topic = '/capture_ot_offset/pose'
-target_pose_data = extract_filtered_topic_data(bag, target_pose_topic, start_time, end_time)
+target_pose_data = extract_shifted_topic_data(bag, target_pose_topic, reference_start_time)
 plot_pose_topic_w_ref(gripper_pose_data, target_pose_data)
 
-topic = '/target_frame_pose'
-data = extract_filtered_topic_data(bag, topic, start_time, end_time)
+topic = '/Way_pts_target_pose'
+data = extract_shifted_topic_data(bag, topic, reference_start_time)
 print(f"Type of data: {type(data)}") # <class 'list'>
 print(f"Number of messages: {len(data)}") # 17218
 print(f"Number of fields in a message: {len(data[0].__slots__)}") # 2
