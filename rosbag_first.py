@@ -84,6 +84,7 @@ def plot_action_topic(messages):
     plt.plot(timestamps, linear_x,  label='X', color='red')
     plt.plot(timestamps, linear_y,  label='Y', color='green')
     plt.plot(timestamps, linear_z,  label='Z', color='blue')
+    plt.axhline(0, color='black', linestyle='--', linewidth=.1)
     plt.title('Displacement Action')
     plt.xlabel('Time (s)')
     plt.ylabel('x0.01 m')
@@ -97,6 +98,7 @@ def plot_action_topic(messages):
     plt.plot(timestamps, angular_x, label='Roll', color='red')
     plt.plot(timestamps, angular_y, label='Pitch', color='green')
     plt.plot(timestamps, angular_z, label='Yaw', color='blue')
+    plt.axhline(0, color='black', linestyle='--', linewidth=.1)
     plt.title('Rotation Action')
     plt.xlabel('Time (s)')
     plt.ylabel('x0.1 rad')
@@ -243,62 +245,107 @@ def plot_pose_topic_w_ref(messages, ref):
     plt.savefig('orientation_euler_plot.png')
     plt.close()
 
-def calculate_velocity(message, window_size=10):
+def calculate_velocity(gripper_message, target_message, window_size=10):
     # Extract the position and orientation values
-    position_x = [msg.pose.position.x for msg in message]
-    position_y = [msg.pose.position.y for msg in message]
-    position_z = [msg.pose.position.z for msg in message]
+    gripper_position_x = [msg.pose.position.x for msg in gripper_message]
+    gripper_position_y = [msg.pose.position.y for msg in gripper_message]
+    gripper_position_z = [msg.pose.position.z for msg in gripper_message]
 
-    position_x_smooth = uniform_filter1d(position_x, size=window_size)
-    position_y_smooth = uniform_filter1d(position_y, size=window_size)
-    position_z_smooth = uniform_filter1d(position_z, size=window_size)
+    target_position_x = [msg.pose.position.x for msg in target_message]
+    target_position_y = [msg.pose.position.y for msg in target_message]
+    target_position_z = [msg.pose.position.z for msg in target_message]
 
-    orientation_x = [msg.pose.orientation.x for msg in message]
-    orientation_y = [msg.pose.orientation.y for msg in message]
-    orientation_z = [msg.pose.orientation.z for msg in message]
-    orientation_w = [msg.pose.orientation.w for msg in message]
+    gripper_position_x_smooth = uniform_filter1d(gripper_position_x, size=window_size)
+    gripper_position_y_smooth = uniform_filter1d(gripper_position_y, size=window_size)
+    gripper_position_z_smooth = uniform_filter1d(gripper_position_z, size=window_size)
 
-    orientation_x_smooth = uniform_filter1d(orientation_x, size=window_size)
-    orientation_y_smooth = uniform_filter1d(orientation_y, size=window_size)
-    orientation_z_smooth = uniform_filter1d(orientation_z, size=window_size)
-    orientation_w_smooth = uniform_filter1d(orientation_w, size=window_size)
+    target_position_x_smooth = uniform_filter1d(target_position_x, size=window_size)
+    target_position_y_smooth = uniform_filter1d(target_position_y, size=window_size)
+    target_position_z_smooth = uniform_filter1d(target_position_z, size=window_size)
+
+    gripper_orientation_x = [msg.pose.orientation.x for msg in gripper_message]
+    gripper_orientation_y = [msg.pose.orientation.y for msg in gripper_message]
+    gripper_orientation_z = [msg.pose.orientation.z for msg in gripper_message]
+    gripper_orientation_w = [msg.pose.orientation.w for msg in gripper_message]
+
+    target_orientation_x = [msg.pose.orientation.x for msg in target_message]
+    target_orientation_y = [msg.pose.orientation.y for msg in target_message]
+    target_orientation_z = [msg.pose.orientation.z for msg in target_message]
+    target_orientation_w = [msg.pose.orientation.w for msg in target_message]
+
+    gripper_orientation_x_smooth = uniform_filter1d(gripper_orientation_x, size=window_size)
+    gripper_orientation_y_smooth = uniform_filter1d(gripper_orientation_y, size=window_size)
+    gripper_orientation_z_smooth = uniform_filter1d(gripper_orientation_z, size=window_size)
+    gripper_orientation_w_smooth = uniform_filter1d(gripper_orientation_w, size=window_size)
+
+    target_orientation_x_smooth = uniform_filter1d(target_orientation_x, size=window_size)
+    target_orientation_y_smooth = uniform_filter1d(target_orientation_y, size=window_size)
+    target_orientation_z_smooth = uniform_filter1d(target_orientation_z, size=window_size)
+    target_orientation_w_smooth = uniform_filter1d(target_orientation_w, size=window_size)
 
     # Calculate the time stamps
-    timestamps = [msg.header.stamp.to_sec() for msg in message]
+    timestamps = [msg.header.stamp.to_sec() for msg in gripper_message]
 
     # Calculate the velocity
-    velocity_x = np.diff(position_x_smooth) / np.diff(timestamps)
-    velocity_y = np.diff(position_y_smooth) / np.diff(timestamps)
-    velocity_z = np.diff(position_z_smooth) / np.diff(timestamps)
+    gripper_velocity_x = np.diff(gripper_position_x_smooth) / np.diff(timestamps)
+    gripper_velocity_y = np.diff(gripper_position_y_smooth) / np.diff(timestamps)
+    gripper_velocity_z = np.diff(gripper_position_z_smooth) / np.diff(timestamps)
+    target_velocity_x = np.diff(target_position_x_smooth) / np.diff(timestamps)
+    target_velocity_y = np.diff(target_position_y_smooth) / np.diff(timestamps)
+    target_velocity_z = np.diff(target_position_z_smooth) / np.diff(timestamps)
 
     # Calculate the angular velocity
-    orintation = list(zip(orientation_x_smooth, orientation_y_smooth, orientation_z_smooth, orientation_w_smooth))
-    euler = [tft.euler_from_quaternion(ori) for ori in orintation]
-    orientation_roll = [e[0] for e in euler]
-    orientation_pitch = [e[1] for e in euler]
-    orientation_yaw = [e[2] for e in euler]
+    gripper_orintation = list(zip(gripper_orientation_x_smooth, gripper_orientation_y_smooth, gripper_orientation_z_smooth, gripper_orientation_w_smooth))
+    gripper_euler = [tft.euler_from_quaternion(ori) for ori in gripper_orintation]
+    gripper_orientation_roll = [e[0] for e in gripper_euler]
+    gripper_orientation_pitch = [e[1] for e in gripper_euler]
+    gripper_orientation_yaw = [e[2] for e in gripper_euler]
 
-    angular_velocity_x = np.diff(orientation_roll) / np.diff(timestamps)
-    angular_velocity_y = np.diff(orientation_pitch) / np.diff(timestamps)
-    angular_velocity_z = np.diff(orientation_yaw) / np.diff(timestamps)
+    target_orientation = list(zip(target_orientation_x_smooth, target_orientation_y_smooth, target_orientation_z_smooth, target_orientation_w_smooth))
+    target_euler = [tft.euler_from_quaternion(ori) for ori in target_orientation]
+    target_orientation_roll = [e[0] for e in target_euler]
+    target_orientation_pitch = [e[1] for e in target_euler]
+    target_orientation_yaw = [e[2] for e in target_euler]
+
+    gripper_angular_velocity_x = np.diff(gripper_orientation_roll) / np.diff(timestamps)
+    gripper_angular_velocity_y = np.diff(gripper_orientation_pitch) / np.diff(timestamps)
+    gripper_angular_velocity_z = np.diff(gripper_orientation_yaw) / np.diff(timestamps)
+
+    target_angular_velocity_x = np.diff(target_orientation_roll) / np.diff(timestamps)
+    target_angular_velocity_y = np.diff(target_orientation_pitch) / np.diff(timestamps)
+    target_angular_velocity_z = np.diff(target_orientation_yaw) / np.diff(timestamps)
 
     # Apply a moving average to smooth the velocity data
-    velocity_x_smooth = uniform_filter1d(velocity_x, size=window_size*5)
-    velocity_y_smooth = uniform_filter1d(velocity_y, size=window_size*5)
-    velocity_z_smooth = uniform_filter1d(velocity_z, size=window_size*5)
+    gripper_velocity_x_smooth = uniform_filter1d(gripper_velocity_x, size=window_size*5)
+    gripper_velocity_y_smooth = uniform_filter1d(gripper_velocity_y, size=window_size*5)
+    gripper_velocity_z_smooth = uniform_filter1d(gripper_velocity_z, size=window_size*5)
 
-    angular_velocity_x_smooth = uniform_filter1d(angular_velocity_x, size=window_size*5)
-    angular_velocity_y_smooth = uniform_filter1d(angular_velocity_y, size=window_size*5)
-    angular_velocity_z_smooth = uniform_filter1d(angular_velocity_z, size=window_size*5)
+    target_velocity_x_smooth = uniform_filter1d(target_velocity_x, size=window_size*5)
+    target_velocity_y_smooth = uniform_filter1d(target_velocity_y, size=window_size*5)
+    target_velocity_z_smooth = uniform_filter1d(target_velocity_z, size=window_size*5)
+
+    gripper_angular_velocity_x_smooth = uniform_filter1d(gripper_angular_velocity_x, size=window_size*5)
+    gripper_angular_velocity_y_smooth = uniform_filter1d(gripper_angular_velocity_y, size=window_size*5)
+    gripper_angular_velocity_z_smooth = uniform_filter1d(gripper_angular_velocity_z, size=window_size*5)
+
+    target_angular_velocity_x_smooth = uniform_filter1d(target_angular_velocity_x, size=window_size*5)
+    target_angular_velocity_y_smooth = uniform_filter1d(target_angular_velocity_y, size=window_size*5)
+    target_angular_velocity_z_smooth = uniform_filter1d(target_angular_velocity_z, size=window_size*5)
 
     # Plot the velocity
     plt.figure()
-    plt.plot(timestamps[:-1], velocity_x,  alpha=0.3, color='red')
-    plt.plot(timestamps[:-1], velocity_x_smooth, label='Velocity X', color='red')
-    plt.plot(timestamps[:-1], velocity_y,  alpha=0.3, color='green')
-    plt.plot(timestamps[:-1], velocity_y_smooth, label='Velocity Y', color='green')
-    plt.plot(timestamps[:-1], velocity_z, alpha=0.3, color='blue')
-    plt.plot(timestamps[:-1], velocity_z_smooth, label='Velocity Z', color='blue')
+    plt.plot(timestamps[:-1], gripper_velocity_x,  alpha=0.3, color='red')
+    plt.plot(timestamps[:-1], gripper_velocity_x_smooth, label='Velocity X', color='red')
+    plt.plot(timestamps[:-1], gripper_velocity_y,  alpha=0.3, color='green')
+    plt.plot(timestamps[:-1], gripper_velocity_y_smooth, label='Velocity Y', color='green')
+    plt.plot(timestamps[:-1], gripper_velocity_z, alpha=0.3, color='blue')
+    plt.plot(timestamps[:-1], gripper_velocity_z_smooth, label='Velocity Z', color='blue')
+    plt.plot(timestamps[:-1], target_velocity_x,  alpha=0.3, color='orange')
+    plt.plot(timestamps[:-1], target_velocity_x_smooth, label='Target Velocity X', color='orange')
+    plt.plot(timestamps[:-1], target_velocity_y,  alpha=0.3, color='purple')
+    plt.plot(timestamps[:-1], target_velocity_y_smooth, label='Target Velocity Y', color='purple')
+    plt.plot(timestamps[:-1], target_velocity_z, alpha=0.3, color='cyan')
+    plt.plot(timestamps[:-1], target_velocity_z_smooth, label='Target Velocity Z', color='cyan')
     plt.axhline(0, color='black', linestyle='--', linewidth=.1)
     plt.title('Linear Velocity over Time')
     plt.xlabel('Time (s)')
@@ -310,12 +357,12 @@ def calculate_velocity(message, window_size=10):
 
     # Plot the angular velocity
     plt.figure()
-    plt.plot(timestamps[:-1], angular_velocity_x, alpha=0.3, color='red')
-    plt.plot(timestamps[:-1], angular_velocity_x_smooth, label='Angular Velocity X', color='red')
-    plt.plot(timestamps[:-1], angular_velocity_y, alpha=0.3, color='green')
-    plt.plot(timestamps[:-1], angular_velocity_y_smooth, label='Angular Velocity Y', color='green')
-    plt.plot(timestamps[:-1], angular_velocity_z, alpha=0.3, color='blue')
-    plt.plot(timestamps[:-1], angular_velocity_z_smooth, label='Angular Velocity Z', color='blue')
+    plt.plot(timestamps[:-1], gripper_angular_velocity_x, alpha=0.3, color='red')
+    plt.plot(timestamps[:-1], gripper_angular_velocity_x_smooth, label='Angular Velocity X', color='red')
+    plt.plot(timestamps[:-1], gripper_angular_velocity_y, alpha=0.3, color='green')
+    plt.plot(timestamps[:-1], gripper_angular_velocity_y_smooth, label='Angular Velocity Y', color='green')
+    plt.plot(timestamps[:-1], gripper_angular_velocity_z, alpha=0.3, color='blue')
+    plt.plot(timestamps[:-1], gripper_angular_velocity_z_smooth, label='Angular Velocity Z', color='blue')
     plt.axhline(0, color='black', linestyle='--', linewidth=.1)
     plt.title('Angular Velocity over Time')
     plt.xlabel('Time (s)')
@@ -325,10 +372,59 @@ def calculate_velocity(message, window_size=10):
     plt.savefig('angular_velocity_plot.png')
     plt.close()
 
-    return velocity_x_smooth, velocity_y_smooth, velocity_z_smooth, angular_velocity_x_smooth, angular_velocity_y_smooth, angular_velocity_z_smooth
+    # return velocity_x_smooth, velocity_y_smooth, velocity_z_smooth, angular_velocity_x_smooth, angular_velocity_y_smooth, angular_velocity_z_smooth
+
+def calculate_distance_and_orientation_difference(gripper_messages, target_messages):
+    distances = []
+    orientation_differences = []
+    timestamps = [msg.header.stamp.to_sec() for msg in gripper_messages]
+
+    for gripper_msg, target_msg in zip(gripper_messages, target_messages):
+        # Position difference (Euclidean distance)
+        dx = gripper_msg.pose.position.x - target_msg.pose.position.x
+        dy = gripper_msg.pose.position.y - target_msg.pose.position.y
+        dz = gripper_msg.pose.position.z - target_msg.pose.position.z
+        distance = np.sqrt(dx**2 + dy**2 + dz**2)
+        distances.append(distance)
+
+        # Quaternion orientation difference
+        gripper_quat = [gripper_msg.pose.orientation.x, gripper_msg.pose.orientation.y, gripper_msg.pose.orientation.z, gripper_msg.pose.orientation.w]
+        target_quat = [target_msg.pose.orientation.x, target_msg.pose.orientation.y, target_msg.pose.orientation.z, target_msg.pose.orientation.w]
+        
+        # Compute angular difference
+        dot_product = np.dot(gripper_quat, target_quat)
+        angular_difference = 2 * np.arccos(np.clip(dot_product, -1.0, 1.0))  # Clipped for numerical stability
+        orientation_differences.append(angular_difference)
+
+    return distances, orientation_differences, timestamps
+
+def plot_distance_and_orientation(distances, orientation_differences, timestamps):
+    # Plot distances
+    plt.figure()
+    plt.plot(timestamps, distances, label='Distance', color='blue')
+    plt.axhline(0, color='black', linestyle='--', linewidth=.1)
+    plt.title('Distance between Gripper and Target over Time')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Distance (m)')
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig('distance_plot.png')
+    plt.close()
+
+    # Plot orientation differences
+    plt.figure()
+    plt.plot(timestamps, orientation_differences, label='Orientation Difference', color='orange')
+    plt.axhline(0, color='black', linestyle='--', linewidth=.1)
+    plt.title('Orientation Difference between Gripper and Target over Time')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Orientation Difference (radians)')
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig('orientation_difference_plot.png')
+    plt.close()
 
 # Load the ROS bag
-bag_path = 'rosbags/delay_2ms_x0.06_both_robots_all50hz_ry_2t10_2024-08-26-16-31-05.bag'
+bag_path = 'rosbags/delay_2ms_x0.06_both_robots_all50Hz_ry_p5_t11_2024-08-26-16-44-27.bag'
 bag = rosbag.Bag(bag_path, 'r')
 
 # Define how much time to cut from the start and the end
@@ -355,29 +451,25 @@ action_data = extract_topic_data(bag, '/action_topic')
 plot_action_topic(action_data)
 gripper_pose_topic = '/capture_c_a_tool1/pose'
 gripper_pose_data = extract_shifted_topic_data(bag, gripper_pose_topic, reference_start_time)
-velocity_x, velocity_y, velocity_z, angular_velocity_x, angular_velocity_y, angular_velocity_z = calculate_velocity(gripper_pose_data)
-# print(f"Velocity X: {velocity_x}")
 target_pose_topic = '/capture_ot_offset/pose'
 target_pose_data = extract_shifted_topic_data(bag, target_pose_topic, reference_start_time)
+target_way_pts_topic = '/Way_pts_target_pose'
+target_way_pts_data = extract_shifted_topic_data(bag, target_way_pts_topic, reference_start_time)
+chaser_way_pts_topic = '/Way_pts_chaser_pose'
+chaser_way_pts_data = extract_shifted_topic_data(bag, chaser_way_pts_topic, reference_start_time)
 plot_pose_topic_w_ref(gripper_pose_data, target_pose_data)
 
-topic = '/Way_pts_target_pose'
-data = extract_shifted_topic_data(bag, topic, reference_start_time)
-print(f"Type of data: {type(data)}") # <class 'list'>
-print(f"Number of messages: {len(data)}") # 17218
-print(f"Number of fields in a message: {len(data[0].__slots__)}") # 2
-print(f"Type of message: {type(data[0])}") # <class 'tmprpp995o7._geometry_msgs__TwistStamped'> <class 'tmp97szykb4._geometry_msgs__PoseStamped'>
-plot_pose_topic(data)
+calculate_velocity(gripper_pose_data, target_pose_data)
 
-# Choose a topic to extract headers from
-# topic = '/action_topic'
-# data = bag.read_messages(topics=[topic])
-# print("type of data: ", type(data))
+distances, orientation_differences, timestamps = calculate_distance_and_orientation_difference(gripper_pose_data, target_pose_data)
+plot_distance_and_orientation(distances, orientation_differences, timestamps)
 
-# Get and plot headers
-# headers = get_headers(bag, topic)
-# print(f"Headers: {headers}")
-# plot_headers(headers)
+# plot_pose_topic_w_ref(target_way_pts_data, gripper_pose_data)
+# print(f"Type of data: {type(data)}") # <class 'list'>
+# print(f"Number of messages: {len(data)}") # 17218
+# print(f"Number of fields in a message: {len(data[0].__slots__)}") # 2
+# print(f"Type of message: {type(data[0])}") # <class 'tmprpp995o7._geometry_msgs__TwistStamped'> <class 'tmp97szykb4._geometry_msgs__PoseStamped'>
+# plot_pose_topic(data)
 
 # Close the bag after use
 bag.close()
