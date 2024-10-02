@@ -53,11 +53,11 @@ def extract_filtered_topic_data(bag, topic, start_time, end_time):
     return messages
 
 # Function to extract messages and shift their timestamps
-def extract_shifted_topic_data(bag, topic, reference_start_time):
+def extract_shifted_topic_data(bag, topic, reference_start_time, refrence_end_time):
     messages = []
     for topic, msg, t in bag.read_messages(topics=[topic]):
         timestamp = t.to_sec()
-        if timestamp >= reference_start_time:
+        if timestamp >= reference_start_time and timestamp <= refrence_end_time:
             messages.append(msg)
     return messages
 
@@ -81,9 +81,9 @@ def plot_action_topic(messages):
 
     # Plot linear.x, linear.y, linear.z in one figure
     plt.figure()
-    plt.plot(timestamps, linear_x,  label='X', color='red')
-    plt.plot(timestamps, linear_y,  label='Y', color='green')
-    plt.plot(timestamps, linear_z,  label='Z', color='blue')
+    plt.plot( linear_x,  label='X', color='red')
+    plt.plot( linear_y,  label='Y', color='green')
+    plt.plot( linear_z,  label='Z', color='blue')
     plt.axhline(0, color='black', linestyle='--', linewidth=.1)
     plt.title('Displacement Action')
     plt.xlabel('Time (s)')
@@ -95,9 +95,9 @@ def plot_action_topic(messages):
 
     # Plot angular.x, angular.y, angular.z in another figure
     plt.figure()
-    plt.plot(timestamps, angular_x, label='Roll', color='red')
-    plt.plot(timestamps, angular_y, label='Pitch', color='green')
-    plt.plot(timestamps, angular_z, label='Yaw', color='blue')
+    plt.plot( angular_x, label='Roll', color='red')
+    plt.plot( angular_y, label='Pitch', color='green')
+    plt.plot( angular_z, label='Yaw', color='blue')
     plt.axhline(0, color='black', linestyle='--', linewidth=.1)
     plt.title('Rotation Action')
     plt.xlabel('Time (s)')
@@ -128,9 +128,9 @@ def plot_pose_topic(messages):
 
     # Plot position.x, position.y, position.z in one figure
     plt.figure()
-    plt.plot(timestamps, position_x,  label='Position X', color='red')
-    plt.plot(timestamps, position_y,  label='Position Y', color='green')
-    plt.plot(timestamps, position_z,  label='Position Z', color='blue')
+    plt.plot( position_x,  label='Position X', color='red')
+    plt.plot( position_y,  label='Position Y', color='green')
+    plt.plot( position_z,  label='Position Z', color='blue')
     plt.title('Position over Time')
     plt.xlabel('Time (s)')
     plt.ylabel('Position')
@@ -141,9 +141,9 @@ def plot_pose_topic(messages):
 
     # Plot orientation.x, orientation.y, orientation.z, orientation.w in another figure
     plt.figure()
-    plt.plot(timestamps, orientation_roll, label='Orientation Roll', color='red')
-    plt.plot(timestamps, orientation_pitch, label='Orientation Pitch', color='green')
-    plt.plot(timestamps, orientation_yaw, label='Orientation Yaw', color='blue')
+    plt.plot( orientation_roll, label='Orientation Roll', color='red')
+    plt.plot( orientation_pitch, label='Orientation Pitch', color='green')
+    plt.plot( orientation_yaw, label='Orientation Yaw', color='blue')
     plt.title('Orientation over Time')
     plt.xlabel('Time (s)')
     plt.ylabel('Orientation')
@@ -191,12 +191,12 @@ def plot_pose_topic_w_ref(messages, ref):
 
     # Plot position.x, position.y, position.z in one figure
     plt.figure()
-    plt.plot(timestamps, position_x, color='red')
-    plt.plot(timestamps, position_y, color='green')
-    plt.plot(timestamps, position_z, color='blue')
-    plt.plot(timestamps_ref, position_x_ref, '--', color='red')
-    plt.plot(timestamps_ref, position_y_ref, '--', color='green')
-    plt.plot(timestamps_ref, position_z_ref, '--', color='blue')
+    plt.plot(position_x, color='red')
+    plt.plot(position_y, color='green')
+    plt.plot(position_z, color='blue')
+    plt.plot(position_x_ref, '--', color='red')
+    plt.plot(position_y_ref, '--', color='green')
+    plt.plot(position_z_ref, '--', color='blue')
     plt.title('Position over Time')
     plt.xlabel('Time (s)')
     plt.ylabel('Position')
@@ -209,14 +209,14 @@ def plot_pose_topic_w_ref(messages, ref):
 
     # Plot orientation.x, orientation.y, orientation.z, orientation.w in another figure
     plt.figure()
-    plt.plot(timestamps, orientation_x, color='red')
-    plt.plot(timestamps, orientation_y, color='green')
-    plt.plot(timestamps, orientation_z, color='blue')
-    plt.plot(timestamps, orientation_w, color='purple')
-    plt.plot(timestamps_ref, orientation_x_ref, '--', color='red')
-    plt.plot(timestamps_ref, orientation_y_ref, '--', color='green')
-    plt.plot(timestamps_ref, orientation_z_ref, '--', color='blue')
-    plt.plot(timestamps_ref, orientation_w_ref, '--', color='purple')
+    plt.plot(orientation_x, color='red')
+    plt.plot(orientation_y, color='green')
+    plt.plot(orientation_z, color='blue')
+    plt.plot(orientation_w, color='purple')
+    plt.plot(orientation_x_ref, '--', color='red')
+    plt.plot(orientation_y_ref, '--', color='green')
+    plt.plot(orientation_z_ref, '--', color='blue')
+    plt.plot(orientation_w_ref, '--', color='purple')
     plt.title('Orientation (quat) over Time')
     plt.xlabel('Time (s)')
     plt.ylabel('Orientation')
@@ -229,12 +229,12 @@ def plot_pose_topic_w_ref(messages, ref):
 
     # Plot orientation roll, pitch, yaw
     plt.figure()
-    plt.plot(timestamps, orientation_roll, label='Orientation Roll', color='red')
-    plt.plot(timestamps, orientation_pitch, label='Orientation Pitch', color='green')
-    plt.plot(timestamps, orientation_yaw, label='Orientation Yaw', color='blue')
-    plt.plot(timestamps_ref, orientation_roll_ref, '--', label='Orientation Roll Ref', color='red')
-    plt.plot(timestamps_ref, orientation_pitch_ref, '--', label='Orientation Pitch Ref', color='green')
-    plt.plot(timestamps_ref, orientation_yaw_ref, '--', label='Orientation Yaw Ref', color='blue')
+    plt.plot(orientation_roll, label='Orientation Roll', color='red')
+    plt.plot(orientation_pitch, label='Orientation Pitch', color='green')
+    plt.plot(orientation_yaw, label='Orientation Yaw', color='blue')
+    plt.plot(orientation_roll_ref, '--', label='Orientation Roll Ref', color='red')
+    plt.plot(orientation_pitch_ref, '--', label='Orientation Pitch Ref', color='green')
+    plt.plot(orientation_yaw_ref, '--', label='Orientation Yaw Ref', color='blue')
     plt.title('Orientation (euler) over Time')
     plt.xlabel('Time (s)')
     plt.ylabel('Orientation')
@@ -332,20 +332,34 @@ def calculate_velocity(gripper_message, target_message, window_size=10):
     target_angular_velocity_y_smooth = uniform_filter1d(target_angular_velocity_y, size=window_size*5)
     target_angular_velocity_z_smooth = uniform_filter1d(target_angular_velocity_z, size=window_size*5)
 
+    gripper_velocity_x_smooth[0] = 0
+    gripper_velocity_y_smooth[0] = 0
+    gripper_velocity_z_smooth[0] = 0
+    target_velocity_x_smooth[0] = 0
+    target_velocity_y_smooth[0] = 0
+    target_velocity_z_smooth[0] = 0
+
+    gripper_angular_velocity_x_smooth[0] = 0
+    gripper_angular_velocity_y_smooth[0] = 0
+    gripper_angular_velocity_z_smooth[0] = 0
+    target_angular_velocity_x_smooth[0] = 0
+    target_angular_velocity_y_smooth[0] = 0
+    target_angular_velocity_z_smooth[0] = 0
+
     # Plot the velocity
     plt.figure()
-    plt.plot(timestamps[:-1], gripper_velocity_x,  alpha=0.3, color='red')
-    plt.plot(timestamps[:-1], gripper_velocity_x_smooth, label='Velocity X', color='red')
-    plt.plot(timestamps[:-1], gripper_velocity_y,  alpha=0.3, color='green')
-    plt.plot(timestamps[:-1], gripper_velocity_y_smooth, label='Velocity Y', color='green')
-    plt.plot(timestamps[:-1], gripper_velocity_z, alpha=0.3, color='blue')
-    plt.plot(timestamps[:-1], gripper_velocity_z_smooth, label='Velocity Z', color='blue')
-    plt.plot(timestamps[:-1], target_velocity_x,  alpha=0.3, color='orange')
-    plt.plot(timestamps[:-1], target_velocity_x_smooth, label='Target Velocity X', color='orange')
-    plt.plot(timestamps[:-1], target_velocity_y,  alpha=0.3, color='purple')
-    plt.plot(timestamps[:-1], target_velocity_y_smooth, label='Target Velocity Y', color='purple')
-    plt.plot(timestamps[:-1], target_velocity_z, alpha=0.3, color='cyan')
-    plt.plot(timestamps[:-1], target_velocity_z_smooth, label='Target Velocity Z', color='cyan')
+    # plt.plot(timestamps[:-1], gripper_velocity_x,  alpha=0.3, color='red')
+    plt.plot( gripper_velocity_x_smooth, label='Velocity X', color='red')
+    # plt.plot(timestamps[:-1], gripper_velocity_y,  alpha=0.3, color='green')
+    plt.plot( gripper_velocity_y_smooth, label='Velocity Y', color='green')
+    # plt.plot(timestamps[:-1], gripper_velocity_z, alpha=0.3, color='blue')
+    plt.plot( gripper_velocity_z_smooth, label='Velocity Z', color='blue')
+    # plt.plot(timestamps[:-1], target_velocity_x,  alpha=0.3, color='orange')
+    plt.plot( target_velocity_x_smooth, label='Target Velocity X', color='red', linestyle='--')
+    # plt.plot(timestamps[:-1], target_velocity_y,  alpha=0.3, color='purple')
+    plt.plot(target_velocity_y_smooth, label='Target Velocity Y', color='green', linestyle='--')
+    # plt.plot(timestamps[:-1], target_velocity_z, alpha=0.3, color='cyan')
+    plt.plot( target_velocity_z_smooth, label='Target Velocity Z', color='blue', linestyle='--')
     plt.axhline(0, color='black', linestyle='--', linewidth=.1)
     plt.title('Linear Velocity over Time')
     plt.xlabel('Time (s)')
@@ -357,12 +371,15 @@ def calculate_velocity(gripper_message, target_message, window_size=10):
 
     # Plot the angular velocity
     plt.figure()
-    plt.plot(timestamps[:-1], gripper_angular_velocity_x, alpha=0.3, color='red')
-    plt.plot(timestamps[:-1], gripper_angular_velocity_x_smooth, label='Angular Velocity X', color='red')
-    plt.plot(timestamps[:-1], gripper_angular_velocity_y, alpha=0.3, color='green')
-    plt.plot(timestamps[:-1], gripper_angular_velocity_y_smooth, label='Angular Velocity Y', color='green')
-    plt.plot(timestamps[:-1], gripper_angular_velocity_z, alpha=0.3, color='blue')
-    plt.plot(timestamps[:-1], gripper_angular_velocity_z_smooth, label='Angular Velocity Z', color='blue')
+    # plt.plot(timestamps[:-1], gripper_angular_velocity_x, alpha=0.3, color='red')
+    plt.plot( gripper_angular_velocity_x_smooth, label='Angular Velocity X', color='red')
+    # plt.plot(timestamps[:-1], gripper_angular_velocity_y, alpha=0.3, color='green')
+    plt.plot( gripper_angular_velocity_y_smooth, label='Angular Velocity Y', color='green')
+    # plt.plot(timestamps[:-1], gripper_angular_velocity_z, alpha=0.3, color='blue')
+    plt.plot( gripper_angular_velocity_z_smooth, label='Angular Velocity Z', color='blue')
+    plt.plot(target_angular_velocity_x_smooth, label='Target Angular Velocity X', color='red', linestyle='--', linewidth=.5)
+    plt.plot(target_angular_velocity_y_smooth, label='Target Angular Velocity Y', color='green', linestyle='--', linewidth=.5)
+    plt.plot(target_angular_velocity_z_smooth, label='Target Angular Velocity Z', color='blue', linestyle='--', linewidth=.5)
     plt.axhline(0, color='black', linestyle='--', linewidth=.1)
     plt.title('Angular Velocity over Time')
     plt.xlabel('Time (s)')
@@ -401,7 +418,7 @@ def calculate_distance_and_orientation_difference(gripper_messages, target_messa
 def plot_distance_and_orientation(distances, orientation_differences, timestamps):
     # Plot distances
     plt.figure()
-    plt.plot(timestamps, distances, label='Distance', color='blue')
+    plt.plot(distances, label='Distance', color='blue')
     plt.axhline(0, color='black', linestyle='--', linewidth=.1)
     plt.title('Distance between Gripper and Target over Time')
     plt.xlabel('Time (s)')
@@ -413,7 +430,7 @@ def plot_distance_and_orientation(distances, orientation_differences, timestamps
 
     # Plot orientation differences
     plt.figure()
-    plt.plot(timestamps, orientation_differences, label='Orientation Difference', color='orange')
+    plt.plot(orientation_differences, label='Orientation Difference', color='blue')
     plt.axhline(0, color='black', linestyle='--', linewidth=.1)
     plt.title('Orientation Difference between Gripper and Target over Time')
     plt.xlabel('Time (s)')
@@ -429,7 +446,7 @@ bag = rosbag.Bag(bag_path, 'r')
 
 # Define how much time to cut from the start and the end
 cut_first_x_seconds = 0  # Cut first X seconds
-cut_last_y_seconds = 0   # Cut last Y seconds
+cut_last_y_seconds = 50   # Cut last Y seconds
 
 # Get the actual start and end time of the bag
 bag_start_time = bag.get_start_time()
@@ -438,25 +455,25 @@ print(f"Bag start time: {bag_start_time}")
 print(f"Bag end time: {bag_end_time}")
 
 # Calculate the new start and end times after cutting
-start_time = bag_start_time + cut_first_x_seconds
-end_time = bag_end_time - cut_last_y_seconds
+# start_time = bag_start_time + cut_first_x_seconds
+reference_end_time = bag_end_time - cut_last_y_seconds
 reference_start_time = get_topic_start_time(bag, '/action_topic')
 
 # Get bag info and print it
-info = get_bag_info(bag)
-print(f"Bag Info: {info}")
+# info = get_bag_info(bag)
+# print(f"Bag Info: {info}")
 
 # Extract data from a topic
-action_data = extract_topic_data(bag, '/action_topic')
+action_data = extract_shifted_topic_data(bag, '/action_topic', reference_start_time, reference_end_time)
 plot_action_topic(action_data)
 gripper_pose_topic = '/capture_c_a_tool1/pose'
-gripper_pose_data = extract_shifted_topic_data(bag, gripper_pose_topic, reference_start_time)
+gripper_pose_data = extract_shifted_topic_data(bag, gripper_pose_topic, reference_start_time, reference_end_time)
 target_pose_topic = '/capture_ot_offset/pose'
-target_pose_data = extract_shifted_topic_data(bag, target_pose_topic, reference_start_time)
+target_pose_data = extract_shifted_topic_data(bag, target_pose_topic, reference_start_time, reference_end_time)
 target_way_pts_topic = '/Way_pts_target_pose'
-target_way_pts_data = extract_shifted_topic_data(bag, target_way_pts_topic, reference_start_time)
+target_way_pts_data = extract_shifted_topic_data(bag, target_way_pts_topic, reference_start_time, reference_end_time)
 chaser_way_pts_topic = '/Way_pts_chaser_pose'
-chaser_way_pts_data = extract_shifted_topic_data(bag, chaser_way_pts_topic, reference_start_time)
+chaser_way_pts_data = extract_shifted_topic_data(bag, chaser_way_pts_topic, reference_start_time, reference_end_time)
 plot_pose_topic_w_ref(gripper_pose_data, target_pose_data)
 
 calculate_velocity(gripper_pose_data, target_pose_data)
