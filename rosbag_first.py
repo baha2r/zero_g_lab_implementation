@@ -6,37 +6,117 @@ import numpy as np
 import tf.transformations as tft
 from scipy.ndimage import uniform_filter1d
 import matplotlib.lines as mlines
+from scipy.spatial.transform import Rotation as R
+import numpy as np
 
+import numpy as np
 
-def quaternion_conjugate(q):
-    """Compute the conjugate (inverse for unit quaternions) of a quaternion."""
-    q_conj = [-q[0], -q[1], -q[2], q[3]]
-    return q_conj
-
-def quaternion_multiply(q1, q2):
-    """Multiplies two quaternions."""
-    w1, x1, y1, z1 = q1
-    w2, x2, y2, z2 = q2
-    w = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2
-    x = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2
-    y = w1 * y2 + y1 * w2 + z1 * x2 - x1 * z2
-    z = w1 * z2 + z1 * w2 + x1 * y2 - y1 * x2
-    return [x, y, z, w]
-
-def quaternion_to_axis_angle(q):
-    """Convert a quaternion to an axis-angle representation."""
-    # Normalize the quaternion
-    q = q / np.linalg.norm(q)
+# Define a function to compute the scalar difference (angular difference) between two quaternions
+def quaternion_angular_difference(q1, q2):
+    """
+    This function takes in two quaternions (q1 and q2) and returns the scalar difference
+    (angular difference) between them in terms of the angle.
     
-    angle = 2 * np.arccos(q[3])
-    sin_half_angle = np.sqrt(1 - q[3] * q[3])
+    Parameters:
+    q1, q2: Arrays or lists of four elements representing the quaternions (w, x, y, z).
     
-    if sin_half_angle < 1e-6:  # If angle is small, axis is not well defined
-        axis = [1, 0, 0]
-    else:
-        axis = [q[0] / sin_half_angle, q[1] / sin_half_angle, q[2] / sin_half_angle]
+    Returns:
+    The angular difference (in radians) between the two quaternions.
+    """
+    # Normalize the quaternions
+    q1 = q1 / np.linalg.norm(q1)
+    q2 = q2 / np.linalg.norm(q2)
     
-    return axis, angle
+    # Compute the dot product between q1 and q2
+    dot_product = np.dot(q1, q2)
+    
+    # Ensure the dot product is within valid range [-1, 1] to avoid numerical errors
+    dot_product = np.clip(dot_product, -1.0, 1.0)
+    
+    # The angle between the two quaternions
+    angle_difference = 2 * np.arccos(np.abs(dot_product))
+    
+    return angle_difference
+
+# Define a function to compute the difference between two quaternions
+# def quaternion_difference(q1, q2):
+#     """
+#     This function takes in two quaternions (q1 and q2) and returns the difference
+#     between them using quaternion multiplication (q1 * inverse(q2)).
+    
+#     Parameters:
+#     q1, q2: Arrays or lists of four elements representing the quaternions (w, x, y, z).
+    
+#     Returns:
+#     The quaternion difference as a numpy array.
+#     """
+#     # Function to calculate the conjugate of a quaternion
+#     def quaternion_conjugate(q):
+#         return np.array([q[0], -q[1], -q[2], -q[3]])
+
+#     # Function to calculate the norm of a quaternion
+#     def quaternion_norm(q):
+#         return np.sqrt(np.sum(np.square(q)))
+
+#     # Function to calculate the inverse of a quaternion
+#     def quaternion_inverse(q):
+#         conjugate = quaternion_conjugate(q)
+#         norm = quaternion_norm(q)
+#         return conjugate / (norm**2)
+
+#     # Multiply q1 by the inverse of q2
+#     def quaternion_multiply(q1, q2):
+#         w1, x1, y1, z1 = q1
+#         w2, x2, y2, z2 = q2
+#         return np.array([
+#             w1*w2 - x1*x2 - y1*y2 - z1*z2,
+#             w1*x2 + x1*w2 + y1*z2 - z1*y2,
+#             w1*y2 - x1*z2 + y1*w2 + z1*x2,
+#             w1*z2 + x1*y2 - y1*x2 + z1*w2
+#         ])
+
+#     # Calculate the inverse of q2
+#     q2_inv = quaternion_inverse(q2)
+    
+#     # Calculate the quaternion difference
+#     q_diff = quaternion_multiply(q1, q2_inv)
+    
+#     return q_diff
+
+# def quaternion_conjugate(q):
+#     """Compute the conjugate (inverse for unit quaternions) of a quaternion."""
+#     q_conj = [-q[0], -q[1], -q[2], q[3]]
+#     return q_conj
+
+# def quaternion_multiply(q1, q2):
+#     """Multiplies two quaternions."""
+#     w1, x1, y1, z1 = q1
+#     w2, x2, y2, z2 = q2
+#     w = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2
+#     x = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2
+#     y = w1 * y2 + y1 * w2 + z1 * x2 - x1 * z2
+#     z = w1 * z2 + z1 * w2 + x1 * y2 - y1 * x2
+#     return [x, y, z, w]
+
+# def quaternion_to_axis_angle(q):
+#     """Convert a quaternion to an axis-angle representation."""
+#     # Normalize the quaternion
+#     q = q / np.linalg.norm(q)
+    
+#     angle = 2 * np.arccos(q[3])
+#     sin_half_angle = np.sqrt(1 - q[3] * q[3])
+    
+#     if sin_half_angle < 1e-6:  # If angle is small, axis is not well defined
+#         axis = [1, 0, 0]
+#     else:
+#         axis = [q[0] / sin_half_angle, q[1] / sin_half_angle, q[2] / sin_half_angle]
+    
+#     return axis, angle
+
+# def quaternion_angle_difference(q1, q2):
+#     q_diff = R.from_quat(q1).inv() * R.from_quat(q2)
+#     angle = 2 * np.arccos(np.clip(q_diff.as_quat()[0], -1.0, 1.0))
+#     return angle
 
 # Function to extract the start time of a topic
 def get_topic_start_time(bag, topic):
@@ -439,16 +519,22 @@ def calculate_distance_and_orientation_difference(gripper_messages, target_messa
         gripper_quat = [gripper_msg.pose.orientation.x, gripper_msg.pose.orientation.y, gripper_msg.pose.orientation.z, gripper_msg.pose.orientation.w]
         target_quat = [target_msg.pose.orientation.x, target_msg.pose.orientation.y, target_msg.pose.orientation.z, target_msg.pose.orientation.w]
 
-        quat_diff = np.subtract(gripper_quat, target_quat)
-        quat_diff_norm = np.linalg.norm(quat_diff)
+        # quat_diff = np.subtract(gripper_quat, target_quat)
+        # quat_diff_norm = np.linalg.norm(quat_diff)
         
-        # Compute angular difference
-        relative_quat = quaternion_multiply(quaternion_conjugate(gripper_quat), target_quat)
-        axis, angle = quaternion_to_axis_angle(relative_quat)
+        # # Compute angular difference
+        # relative_quat = quaternion_multiply(quaternion_conjugate(gripper_quat), target_quat)
+        # axis, angle = quaternion_to_axis_angle(relative_quat)
 
-        angle = np.mod(angle + np.pi, 2 * np.pi) # Normalize the angle to be between -pi and pi
+        # angle = np.mod(angle + np.pi, 2 * np.pi) # Normalize the angle to be between -pi and pi
 
-        orientation_differences.append(angle)
+        # angle = quaternion_angle_difference(gripper_quat, target_quat)
+        # angle = np.abs(angle - np.pi)
+
+        quat_diff_norm = quaternion_angular_difference(gripper_quat, target_quat)
+        quat_diff_norm -= .088
+
+        orientation_differences.append(quat_diff_norm)
 
     return distances, orientation_differences, timestamps
 
