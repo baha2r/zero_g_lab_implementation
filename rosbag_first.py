@@ -115,7 +115,7 @@ def plot_action_topic(messages):
     plt.close()
 
     # Plot angular.x, angular.y, angular.z in another figure
-    plt.figure(figsize=(10, 6))
+    plt.figure()
     plt.plot( angular_x, label='Roll', color='red')
     plt.plot( angular_y, label='Pitch', color='green')
     plt.plot( angular_z, label='Yaw', color='blue')
@@ -149,7 +149,7 @@ def plot_pose_topic(messages):
     timestamps = [msg.header.stamp.to_sec() for msg in messages]
 
     # Plot position.x, position.y, position.z in one figure
-    plt.figure(figsize=(10, 6))
+    plt.figure()
     plt.plot( position_x,  label='Position X', color='red')
     plt.plot( position_y,  label='Position Y', color='green')
     plt.plot( position_z,  label='Position Z', color='blue')
@@ -163,7 +163,7 @@ def plot_pose_topic(messages):
     plt.close()
 
     # Plot orientation.x, orientation.y, orientation.z, orientation.w in another figure
-    plt.figure(figsize=(10, 6))
+    plt.figure()
     plt.plot( orientation_roll, label='Orientation Roll', color='red')
     plt.plot( orientation_pitch, label='Orientation Pitch', color='green')
     plt.plot( orientation_yaw, label='Orientation Yaw', color='blue')
@@ -214,7 +214,6 @@ def plot_pose_topic_w_ref(messages, ref):
     timestamps_ref = [msg.header.stamp.to_sec() for msg in ref]
 
     # Plot position.x, position.y, position.z in one figure
-    # plt.figure(figsize=(10, 6))
     plt.figure()
     plt.plot(position_x, color='red')
     plt.plot(position_y, color='green')
@@ -375,7 +374,7 @@ def calculate_velocity(gripper_message, target_message, window_size=10):
     target_angular_velocity_z_smooth[0] = 0
 
     # Plot the velocity
-    plt.figure(figsize=(10, 6))
+    plt.figure()
     # plt.plot(timestamps[:-1], gripper_velocity_x,  alpha=0.3, color='red')
     plt.plot( gripper_velocity_x_smooth,  color='red')
     # plt.plot(timestamps[:-1], gripper_velocity_y,  alpha=0.3, color='green')
@@ -392,16 +391,16 @@ def calculate_velocity(gripper_message, target_message, window_size=10):
     target_line = mlines.Line2D([], [], color='black', linestyle='--', label='Target', linewidth=.5)
     plt.legend(handles=[gripper_line, target_line], fontsize=12)
     plt.axhline(0, color='black', linestyle='--', linewidth=.1)
-    plt.title('Linear Velocity', fontsize=22)
-    plt.xlabel('Timesteps', fontsize=18)
-    plt.ylabel('meter/sec', fontsize=18)
-    plt.tick_params(axis='both', which='major', labelsize=10)
+    plt.title('Linear Velocity', fontsize=26)
+    plt.xlabel('Timesteps', fontsize=22)
+    plt.ylabel('meter/sec', fontsize=22)
+    plt.tick_params(axis='both', which='major', labelsize=14)
     plt.tight_layout()
     plt.savefig('velocity_plot.svg', format='svg')
     plt.close()
 
     # Plot the angular velocity
-    plt.figure(figsize=(10, 6))
+    plt.figure()
     # plt.plot(timestamps[:-1], gripper_angular_velocity_x, alpha=0.3, color='red')
     plt.plot( gripper_angular_velocity_x_smooth, color='red')
     # plt.plot(timestamps[:-1], gripper_angular_velocity_y, alpha=0.3, color='green')
@@ -415,10 +414,10 @@ def calculate_velocity(gripper_message, target_message, window_size=10):
     gripper_line = mlines.Line2D([], [], color='black', linestyle='-', label='Gripper')
     target_line = mlines.Line2D([], [], color='black', linestyle='--', label='Target', linewidth=.5)
     plt.legend(handles=[gripper_line, target_line], fontsize=12)
-    plt.title('Angular Velocity', fontsize=22)
-    plt.xlabel('Timesteps', fontsize=18)
-    plt.ylabel('rad/sec', fontsize=18)
-    plt.tick_params(axis='both', which='major', labelsize=10)
+    plt.title('Angular Velocity', fontsize=26)
+    plt.xlabel('Timesteps', fontsize=22)
+    plt.ylabel('rad/sec', fontsize=22)
+    plt.tick_params(axis='both', which='major', labelsize=14)
     plt.tight_layout()
     plt.savefig('angular_velocity_plot.svg', format='svg')
     plt.close()
