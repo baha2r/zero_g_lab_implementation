@@ -454,8 +454,7 @@ def calculate_distance_and_orientation_difference(gripper_messages, target_messa
     return distances, orientation_differences, timestamps
 
 def plot_distance_and_orientation(distances, orientation_differences, timestamps):
-    # reduce distances by 0.1
-    distances = [d - 0.1 for d in distances]
+    distances = [d - 0.073 for d in distances]
     plt.figure(figsize=(10, 6))
     plt.plot(distances, label='Distance', color='blue')
     plt.axhline(0, color='black', linestyle='--', linewidth=.1)
