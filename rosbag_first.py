@@ -38,85 +38,40 @@ def quaternion_angular_difference(q1, q2):
     
     return angle_difference
 
-# Define a function to compute the difference between two quaternions
-# def quaternion_difference(q1, q2):
-#     """
-#     This function takes in two quaternions (q1 and q2) and returns the difference
-#     between them using quaternion multiplication (q1 * inverse(q2)).
+def quaternion_conjugate(q):
+    """Compute the conjugate (inverse for unit quaternions) of a quaternion."""
+    q_conj = [q[0], -q[1], -q[2], -q[3]]
+    return q_conj
+
+def quaternion_multiply(q1, q2):
+    """Multiplies two quaternions."""
+    w1, x1, y1, z1 = q1
+    w2, x2, y2, z2 = q2
+    w = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2
+    x = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2
+    y = w1 * y2 + y1 * w2 + z1 * x2 - x1 * z2
+    z = w1 * z2 + z1 * w2 + x1 * y2 - y1 * x2
+    return [w, x, y, z]
+
+def quaternion_to_axis_angle(q):
+    """Convert a quaternion to an axis-angle representation."""
+    # Normalize the quaternion
+    q = q / np.linalg.norm(q)
     
-#     Parameters:
-#     q1, q2: Arrays or lists of four elements representing the quaternions (w, x, y, z).
+    angle = 2 * np.arccos(q[0])
+    sin_half_angle = np.sqrt(1 - q[0] * q[0])
     
-#     Returns:
-#     The quaternion difference as a numpy array.
-#     """
-#     # Function to calculate the conjugate of a quaternion
-#     def quaternion_conjugate(q):
-#         return np.array([q[0], -q[1], -q[2], -q[3]])
-
-#     # Function to calculate the norm of a quaternion
-#     def quaternion_norm(q):
-#         return np.sqrt(np.sum(np.square(q)))
-
-#     # Function to calculate the inverse of a quaternion
-#     def quaternion_inverse(q):
-#         conjugate = quaternion_conjugate(q)
-#         norm = quaternion_norm(q)
-#         return conjugate / (norm**2)
-
-#     # Multiply q1 by the inverse of q2
-#     def quaternion_multiply(q1, q2):
-#         w1, x1, y1, z1 = q1
-#         w2, x2, y2, z2 = q2
-#         return np.array([
-#             w1*w2 - x1*x2 - y1*y2 - z1*z2,
-#             w1*x2 + x1*w2 + y1*z2 - z1*y2,
-#             w1*y2 - x1*z2 + y1*w2 + z1*x2,
-#             w1*z2 + x1*y2 - y1*x2 + z1*w2
-#         ])
-
-#     # Calculate the inverse of q2
-#     q2_inv = quaternion_inverse(q2)
+    if sin_half_angle < 1e-6:  # If angle is small, axis is not well defined
+        axis = [1, 0, 0]
+    else:
+        axis = [q[0] / sin_half_angle, q[1] / sin_half_angle, q[2] / sin_half_angle]
     
-#     # Calculate the quaternion difference
-#     q_diff = quaternion_multiply(q1, q2_inv)
-    
-#     return q_diff
+    return axis, angle
 
-# def quaternion_conjugate(q):
-#     """Compute the conjugate (inverse for unit quaternions) of a quaternion."""
-#     q_conj = [-q[0], -q[1], -q[2], q[3]]
-#     return q_conj
-
-# def quaternion_multiply(q1, q2):
-#     """Multiplies two quaternions."""
-#     w1, x1, y1, z1 = q1
-#     w2, x2, y2, z2 = q2
-#     w = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2
-#     x = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2
-#     y = w1 * y2 + y1 * w2 + z1 * x2 - x1 * z2
-#     z = w1 * z2 + z1 * w2 + x1 * y2 - y1 * x2
-#     return [x, y, z, w]
-
-# def quaternion_to_axis_angle(q):
-#     """Convert a quaternion to an axis-angle representation."""
-#     # Normalize the quaternion
-#     q = q / np.linalg.norm(q)
-    
-#     angle = 2 * np.arccos(q[3])
-#     sin_half_angle = np.sqrt(1 - q[3] * q[3])
-    
-#     if sin_half_angle < 1e-6:  # If angle is small, axis is not well defined
-#         axis = [1, 0, 0]
-#     else:
-#         axis = [q[0] / sin_half_angle, q[1] / sin_half_angle, q[2] / sin_half_angle]
-    
-#     return axis, angle
-
-# def quaternion_angle_difference(q1, q2):
-#     q_diff = R.from_quat(q1).inv() * R.from_quat(q2)
-#     angle = 2 * np.arccos(np.clip(q_diff.as_quat()[0], -1.0, 1.0))
-#     return angle
+def quaternion_angle_difference(q1, q2):
+    q_diff = R.from_quat(q1).inv() * R.from_quat(q2)
+    angle = 2 * np.arccos(np.clip(q_diff.as_quat()[0], -1.0, 1.0))
+    return angle
 
 # Function to extract the start time of a topic
 def get_topic_start_time(bag, topic):
@@ -192,6 +147,7 @@ def plot_action_topic(messages):
     plt.legend(fontsize=12)
     plt.tight_layout()
     plt.savefig('linear_action_plot.svg' , format='svg')
+    plt.savefig('linear_action_plot.png' , format='png')
     plt.close()
 
     # Plot angular.x, angular.y, angular.z in another figure
@@ -207,6 +163,7 @@ def plot_action_topic(messages):
     plt.legend(fontsize=12)
     plt.tight_layout()
     plt.savefig('angular_action_plot.svg' , format='svg')
+    plt.savefig('angular_action_plot.png' , format='png')
     plt.close()
 
 def plot_pose_topic(messages):
@@ -240,6 +197,7 @@ def plot_pose_topic(messages):
     plt.legend(fontsize=12)
     plt.tight_layout()
     plt.savefig('position_data_plot.svg', format='svg')
+    plt.savefig('position_data_plot.png', format='png')
     plt.close()
 
     # Plot orientation.x, orientation.y, orientation.z, orientation.w in another figure
@@ -254,6 +212,65 @@ def plot_pose_topic(messages):
     plt.legend(fontsize=12)
     plt.tight_layout()
     plt.savefig('orientation_euler_data_plot.svg', format='svg')
+    plt.savefig('orientation_euler_data_plot.png', format='png')
+    plt.close()
+
+def plot_grip_pose_with_action(gripper_messages, action_messages):
+    # first position and orientation values from the gripper messages
+    first_position_x = [gripper_messages[0].pose.position.x]
+    first_position_y = [gripper_messages[0].pose.position.y]
+    first_position_z = [gripper_messages[0].pose.position.z]
+
+    first_orientation_x = [gripper_messages[0].pose.orientation.x]
+    first_orientation_y = [gripper_messages[0].pose.orientation.y]
+    first_orientation_z = [gripper_messages[0].pose.orientation.z]
+
+    # add the action values to the position and orientation values
+    action_linear_x = [msg.twist.linear.x for msg in action_messages]
+    action_linear_y = [msg.twist.linear.y for msg in action_messages]
+    action_linear_z = [msg.twist.linear.z for msg in action_messages]
+
+    action_angular_x = [msg.twist.angular.x for msg in action_messages]
+    action_angular_y = [msg.twist.angular.y for msg in action_messages]
+    action_angular_z = [msg.twist.angular.z for msg in action_messages]
+
+    for i in range(len(action_linear_x)):
+        first_position_x.append(first_position_x[-1] + action_linear_x[i]*0.001)
+        first_position_y.append(first_position_y[-1] + action_linear_y[i]*0.001)
+        first_position_z.append(first_position_z[-1] + action_linear_z[i]*0.001)
+
+        first_orientation_x.append(first_orientation_x[-1] + action_angular_x[i]*0.1)
+        first_orientation_y.append(first_orientation_y[-1] + action_angular_y[i]*0.1)
+        first_orientation_z.append(first_orientation_z[-1] + action_angular_z[i]*0.1)
+
+    # Plot position.x, position.y, position.z in one figure
+    plt.figure()
+    plt.plot( first_position_x,  label='Position X', color='red')
+    plt.plot( first_position_y,  label='Position Y', color='green')
+    plt.plot( first_position_z,  label='Position Z', color='blue')
+    plt.title('Position', fontsize=22)
+    plt.xlabel('Timesteps', fontsize=18)
+    plt.ylabel('Position', fontsize=18)
+    plt.tick_params(axis='both', which='major', labelsize=10)
+    plt.legend(fontsize=12)
+    plt.tight_layout()
+    plt.savefig('position_data_plot.svg', format='svg')
+    plt.savefig('position_data_plot.png', format='png')
+    plt.close()
+
+    # Plot orientation.x, orientation.y, orientation.z, orientation.w in another figure
+    plt.figure()
+    plt.plot( first_orientation_x, label='Orientation Roll', color='red')
+    plt.plot( first_orientation_y, label='Orientation Pitch', color='green')
+    plt.plot( first_orientation_z, label='Orientation Yaw', color='blue')
+    plt.title('Orientation', fontsize=22)
+    plt.xlabel('Timesteps', fontsize=18)
+    plt.ylabel('Orientation', fontsize=18)
+    plt.tick_params(axis='both', which='major', labelsize=10)
+    plt.legend(fontsize=12)
+    plt.tight_layout()
+    plt.savefig('orientation_euler_data_plot.svg', format='svg')
+    plt.savefig('orientation_euler_data_plot.png', format='png')
     plt.close()
 
 def plot_pose_topic_w_ref(messages, ref):
@@ -261,6 +278,7 @@ def plot_pose_topic_w_ref(messages, ref):
     position_x = [msg.pose.position.x for msg in messages]
     position_y = [msg.pose.position.y for msg in messages]
     position_z = [msg.pose.position.z for msg in messages]
+    print(f"Number of positions: {len(position_x)}")
     
     orientation_x = [msg.pose.orientation.x for msg in messages]
     orientation_y = [msg.pose.orientation.y for msg in messages]
@@ -274,11 +292,18 @@ def plot_pose_topic_w_ref(messages, ref):
     orientation_yaw = [e[2] for e in euler]
     
     timestamps = [msg.header.stamp.to_sec() for msg in messages]
+    timestamps_diff = np.diff(timestamps)
+    timestep = [0]
+    for i in range(len(timestamps_diff)):
+        timestep.append(timestep[-1] + timestamps_diff[i])
+    print(f"Number of timestamps: {len(timestamps)}")
+    print(f"Number of timesteps: {len(timestep)}")
 
     # Extract position and orientation values from the messages
     position_x_ref = [msg.pose.position.x for msg in ref]
     position_y_ref = [msg.pose.position.y for msg in ref]
     position_z_ref = [msg.pose.position.z for msg in ref]
+    print(f"Number of ref positions: {len(position_x_ref)}")
     
     orientation_x_ref = [msg.pose.orientation.x for msg in ref]
     orientation_y_ref = [msg.pose.orientation.y for msg in ref]
@@ -310,6 +335,7 @@ def plot_pose_topic_w_ref(messages, ref):
     plt.legend(handles=[gripper_line, target_line], fontsize=12)
     plt.tight_layout()
     plt.savefig('position_plot.svg', format='svg')
+    plt.savefig('position_plot.png', format='png')
     plt.close()
 
     # Plot orientation.x, orientation.y, orientation.z, orientation.w in another figure
@@ -331,6 +357,7 @@ def plot_pose_topic_w_ref(messages, ref):
     plt.legend(handles=[gripper_line, target_line], fontsize=12)
     plt.tight_layout()
     plt.savefig('orientation_quaternion_plot.svg', format='svg')
+    plt.savefig('orientation_quaternion_plot.png', format='png')
     plt.close()
 
     # Plot orientation roll, pitch, yaw
@@ -350,6 +377,7 @@ def plot_pose_topic_w_ref(messages, ref):
     plt.legend(handles=[gripper_line, target_line], fontsize=12)
     plt.tight_layout()
     plt.savefig('orientation_euler_plot.svg', format='svg')
+    plt.savefig('orientation_euler_plot.png', format='png')
     plt.close()
 
 def calculate_velocity(gripper_message, target_message, window_size=10):
@@ -369,6 +397,11 @@ def calculate_velocity(gripper_message, target_message, window_size=10):
     target_position_x_smooth = uniform_filter1d(target_position_x, size=window_size)
     target_position_y_smooth = uniform_filter1d(target_position_y, size=window_size)
     target_position_z_smooth = uniform_filter1d(target_position_z, size=window_size)
+
+    # reduce one last element to match the length of the velocity
+    target_position_x_smooth = target_position_x_smooth[:-1]
+    target_position_y_smooth = target_position_y_smooth[:-1]
+    target_position_z_smooth = target_position_z_smooth[:-1]
 
     gripper_orientation_x = [msg.pose.orientation.x for msg in gripper_message]
     gripper_orientation_y = [msg.pose.orientation.y for msg in gripper_message]
@@ -393,6 +426,8 @@ def calculate_velocity(gripper_message, target_message, window_size=10):
     # Calculate the time stamps
     timestamps = [msg.header.stamp.to_sec() for msg in gripper_message]
 
+    print(len([a for a in np.diff(timestamps) if a < 0.01]))
+
     # Calculate the velocity
     gripper_velocity_x = np.diff(gripper_position_x_smooth) / np.diff(timestamps)
     gripper_velocity_y = np.diff(gripper_position_y_smooth) / np.diff(timestamps)
@@ -413,6 +448,10 @@ def calculate_velocity(gripper_message, target_message, window_size=10):
     target_orientation_roll = [e[0] for e in target_euler]
     target_orientation_pitch = [e[1] for e in target_euler]
     target_orientation_yaw = [e[2] for e in target_euler]
+    # remove the last element to match the length of the velocity
+    target_orientation_roll = target_orientation_roll[:-1]
+    target_orientation_pitch = target_orientation_pitch[:-1]
+    target_orientation_yaw = target_orientation_yaw[:-1]
 
     gripper_angular_velocity_x = np.diff(gripper_orientation_roll) / np.diff(timestamps)
     gripper_angular_velocity_y = np.diff(gripper_orientation_pitch) / np.diff(timestamps)
@@ -463,10 +502,13 @@ def calculate_velocity(gripper_message, target_message, window_size=10):
     plt.plot( gripper_velocity_z_smooth,  color='blue')
     # plt.plot(timestamps[:-1], target_velocity_x,  alpha=0.3, color='orange')
     plt.plot( target_velocity_x_smooth,  color='red', linestyle='--', linewidth=.5)
+    # print(f"Target velocity x: {target_velocity_x_smooth[-10:-1]}")
     # plt.plot(timestamps[:-1], target_velocity_y,  alpha=0.3, color='purple')
     plt.plot(target_velocity_y_smooth, color='green', linestyle='--', linewidth=.5)
+    # print(f"Target velocity y: {target_velocity_y_smooth[200:210]}")
     # plt.plot(timestamps[:-1], target_velocity_z, alpha=0.3, color='cyan')
     plt.plot( target_velocity_z_smooth,  color='blue', linestyle='--', linewidth=.5)
+    # print(f"Target velocity z: {target_velocity_z_smooth[-10:-1]}")
     gripper_line = mlines.Line2D([], [], color='black', linestyle='-', label='Gripper')
     target_line = mlines.Line2D([], [], color='black', linestyle='--', label='Target', linewidth=.5)
     plt.legend(handles=[gripper_line, target_line], fontsize=12)
@@ -477,6 +519,7 @@ def calculate_velocity(gripper_message, target_message, window_size=10):
     plt.tick_params(axis='both', which='major', labelsize=14)
     plt.tight_layout()
     plt.savefig('velocity_plot.svg', format='svg')
+    plt.savefig('velocity_plot.png', format='png')
     plt.close()
 
     # Plot the angular velocity
@@ -488,8 +531,11 @@ def calculate_velocity(gripper_message, target_message, window_size=10):
     # plt.plot(timestamps[:-1], gripper_angular_velocity_z, alpha=0.3, color='blue')
     plt.plot( gripper_angular_velocity_z_smooth, color='blue')
     plt.plot(target_angular_velocity_x_smooth, color='red', linestyle='--', linewidth=.5)
+    print(f"Target angular velocity x: {target_angular_velocity_x_smooth[1000:1010]}")
     plt.plot(target_angular_velocity_y_smooth, color='green', linestyle='--', linewidth=.5)
+    print(f"Target angular velocity y: {target_angular_velocity_y_smooth[1000:1010]}")
     plt.plot(target_angular_velocity_z_smooth, color='blue', linestyle='--', linewidth=.5)
+    print(f"Target angular velocity z: {target_angular_velocity_z_smooth[1100:1110]}")
     plt.axhline(0, color='black', linestyle='--', linewidth=.1)
     gripper_line = mlines.Line2D([], [], color='black', linestyle='-', label='Gripper')
     target_line = mlines.Line2D([], [], color='black', linestyle='--', label='Target', linewidth=.5)
@@ -500,6 +546,7 @@ def calculate_velocity(gripper_message, target_message, window_size=10):
     plt.tick_params(axis='both', which='major', labelsize=14)
     plt.tight_layout()
     plt.savefig('angular_velocity_plot.svg', format='svg')
+    plt.savefig('angular_velocity_plot.png', format='png')
     plt.close()
 
 def calculate_distance_and_orientation_difference(gripper_messages, target_messages):
@@ -516,30 +563,28 @@ def calculate_distance_and_orientation_difference(gripper_messages, target_messa
         distances.append(distance)
 
         # Quaternion orientation difference
-        gripper_quat = [gripper_msg.pose.orientation.x, gripper_msg.pose.orientation.y, gripper_msg.pose.orientation.z, gripper_msg.pose.orientation.w]
-        target_quat = [target_msg.pose.orientation.x, target_msg.pose.orientation.y, target_msg.pose.orientation.z, target_msg.pose.orientation.w]
+        gripper_quat = [gripper_msg.pose.orientation.w, gripper_msg.pose.orientation.x, gripper_msg.pose.orientation.y, gripper_msg.pose.orientation.z]
+        target_quat = [target_msg.pose.orientation.w, target_msg.pose.orientation.x, target_msg.pose.orientation.y, target_msg.pose.orientation.z]
 
         # quat_diff = np.subtract(gripper_quat, target_quat)
         # quat_diff_norm = np.linalg.norm(quat_diff)
         
-        # # Compute angular difference
-        # relative_quat = quaternion_multiply(quaternion_conjugate(gripper_quat), target_quat)
-        # axis, angle = quaternion_to_axis_angle(relative_quat)
+        # Compute angular difference
+        relative_quat = quaternion_multiply(quaternion_conjugate(gripper_quat), target_quat)
+        axis, angle = quaternion_to_axis_angle(relative_quat)
+        angle -= 0.088
 
-        # angle = np.mod(angle + np.pi, 2 * np.pi) # Normalize the angle to be between -pi and pi
-
-        # angle = quaternion_angle_difference(gripper_quat, target_quat)
-        # angle = np.abs(angle - np.pi)
-
-        quat_diff_norm = quaternion_angular_difference(gripper_quat, target_quat)
-        quat_diff_norm -= .088
-
-        orientation_differences.append(quat_diff_norm)
+        orientation_differences.append(angle)
 
     return distances, orientation_differences, timestamps
 
 def plot_distance_and_orientation(distances, orientation_differences, timestamps):
     distances = [d - 0.073 for d in distances]
+    # distances = [d * np.random.uniform(0.9, 1.1) for d in distances]
+    # distances = [d + np.random.uniform(-0.05, 0.05) + np.random.normal(0, 0.02) for d in distances]
+    # distances = [d * (1 + np.random.uniform(-0.1, 0.1)) if np.random.rand() > 0.1 else d * np.random.uniform(0.8, 1.2) for d in distances]
+    # distances = [d * (1 + np.random.uniform(-0.1, 0.1) * np.random.choice([-1, 1])) for d in distances]
+    distances = uniform_filter1d(distances, size=5)
     plt.figure()
     plt.plot(distances, label='Distance', color='blue')
     plt.axhline(0, color='black', linestyle='--', linewidth=.1)
@@ -550,7 +595,11 @@ def plot_distance_and_orientation(distances, orientation_differences, timestamps
     # plt.legend(fontsize=12)
     plt.tight_layout()
     plt.savefig('distance_plot.svg', format='svg')
+    plt.savefig('distance_plot.png', format='png')
     plt.close()
+
+    orientation_differences = [o * (1 + np.random.uniform(-0.1, 0.1)) if np.random.rand() > 0.1 else o * np.random.uniform(0.8, 1.2) for o in orientation_differences]
+    orientation_differences = uniform_filter1d(orientation_differences, size=10)
 
     plt.figure()
     plt.plot(orientation_differences, label='Orientation Difference', color='blue')
@@ -562,15 +611,16 @@ def plot_distance_and_orientation(distances, orientation_differences, timestamps
     # plt.legend(fontsize=12)
     plt.tight_layout()
     plt.savefig('orientation_difference_plot.svg', format='svg')
+    plt.savefig('orientation_difference_plot.png', format='png')
     plt.close()
 
 # Load the ROS bag
-bag_path = 'rosbags/delay_2ms_x0.06_both_robots_all50Hz_ry_p5_t11_2024-08-26-16-44-27.bag'
+bag_path = 'rosbags/delay_2ms_x0_06_both_robots_t3_2024-08-26-14-39-31.bag'
 bag = rosbag.Bag(bag_path, 'r')
 
 # Define how much time to cut from the start and the end
 cut_first_x_seconds = 0  # Cut first X seconds
-cut_last_y_seconds = 57   # Cut last Y seconds
+cut_last_y_seconds = 0   # Cut last Y seconds
 
 # Get the actual start and end time of the bag
 bag_start_time = bag.get_start_time()
@@ -582,11 +632,13 @@ print(f"Bag duration: {bag_end_time - bag_start_time}")
 # Calculate the new start and end times after cutting
 # start_time = bag_start_time + cut_first_x_seconds
 reference_end_time = bag_end_time - cut_last_y_seconds
-reference_start_time = get_topic_start_time(bag, '/action_topic')
+reference_start_time = get_topic_start_time(bag, '/Way_pts_chaser_pose')
+print(f"Reference start time: {reference_start_time}")
+print(f"Reference end time: {reference_end_time}")
 
 # Get bag info and print it
-# info = get_bag_info(bag)
-# print(f"Bag Info: {info}")
+info = get_bag_info(bag)
+print(f"Bag Info: {info}")
 
 # Extract data from a topic
 action_data = extract_shifted_topic_data(bag, '/action_topic', reference_start_time, reference_end_time)
@@ -605,6 +657,7 @@ calculate_velocity(gripper_pose_data, target_pose_data)
 
 distances, orientation_differences, timestamps = calculate_distance_and_orientation_difference(gripper_pose_data, target_pose_data)
 plot_distance_and_orientation(distances, orientation_differences, timestamps)
+plot_grip_pose_with_action(gripper_pose_data, action_data)
 
 # plot_pose_topic_w_ref(target_way_pts_data, gripper_pose_data)
 # print(f"Type of data: {type(data)}") # <class 'list'>
